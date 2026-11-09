@@ -1,0 +1,6 @@
+{
+  "name": "Be Bodywise · The 90-Day Results System",
+  "description": "A connected system that starts before you buy and stays with you through the critical 90-day results window — so you always know whether it's too early, on track, or time to change something.",
+  "requestFramePermissions": ["camera"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

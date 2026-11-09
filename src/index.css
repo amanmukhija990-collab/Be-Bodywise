@@ -1,0 +1,91 @@
+@import "tailwindcss";
+
+@theme {
+  --font-serif: "Lora", Georgia, serif;
+  --font-sans: "DM Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+
+  --color-cream: #FAF7F0;
+  --color-cream-2: #F5F1E8;
+  --color-beige: #F0EBE1;
+  --color-card: #FFFFFF;
+  --color-ink: #172319;
+  --color-ink-2: #18231F;
+  --color-forest: #2C5044;
+  --color-forest-muted: #2E3E33;
+  --color-amber: #A46F39;
+  --color-amber-hover: #8F5E2D;
+  --color-amber-light: #E29D52;
+  --color-mint: #8EBEA6;
+  --color-mint-bg: #E8F1EC;
+  --color-toast-bg: #ECFEF2;
+  --color-peach-from: #EADCC2;
+  --color-peach-to: #EAC598;
+  --color-lavender-bg: #EEEAFB;
+  --color-lavender-text: #5B4BC4;
+  --color-muted-text: #6B6F66;
+  --color-line: #E9E4D8;
+}
+
+:root {
+  --cream: #FAF7F0;
+  --cream-2: #F5F1E8;
+  --beige: #F0EBE1;
+  --card: #FFFFFF;
+  --ink: #172319;
+  --ink-2: #18231F;
+  --forest: #2C5044;
+  --forest-muted: #2E3E33;
+  --amber: #A46F39;
+  --amber-hover: #8F5E2D;
+  --amber-light: #E29D52;
+  --mint: #8EBEA6;
+  --mint-bg: #E8F1EC;
+  --toast-bg: #ECFEF2;
+  --peach-from: #EADCC2;
+  --peach-to: #EAC598;
+  --lavender-bg: #EEEAFB;
+  --lavender-text: #5B4BC4;
+  --muted-text: #6B6F66;
+  --line: #E9E4D8;
+}
+
+body {
+  background-color: var(--cream);
+  color: var(--ink);
+  font-family: "DM Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #D9D2C3;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #A46F39;
+}
+
+/* Continuous marquee animation */
+@keyframes marquee {
+  0% { transform: translateX(0%); }
+  100% { transform: translateX(-50%); }
+}
+
+.animate-marquee {
+  display: flex;
+  width: max-content;
+  animation: marquee 28s linear infinite;
+}
+.animate-marquee:hover {
+  animation-play-state: paused;
+}
+

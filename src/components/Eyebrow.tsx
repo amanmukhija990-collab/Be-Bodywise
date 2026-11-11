@@ -8,7 +8,7 @@ interface EyebrowProps {
 
 export const Eyebrow: React.FC<EyebrowProps> = ({
   children,
-  color = 'text-[#A46F39]',
+  color = 'text-[#005995]',
   className = '',
 }) => {
   return (

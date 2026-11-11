@@ -24,7 +24,7 @@ export const CircularProgressRing: React.FC<CircularProgressRingProps> = ({
 
   // Dynamic stroke color based on day phase if not specified
   const ringColor = strokeColor || (
-    day <= 7 ? '#5B4BC4' : day <= 42 ? '#E29D52' : '#2C5044'
+    day <= 7 ? '#4292C7' : day <= 42 ? '#005995' : '#143461'
   );
 
   return (
@@ -38,7 +38,7 @@ export const CircularProgressRing: React.FC<CircularProgressRingProps> = ({
           cx={size / 2}
           cy={size / 2}
           r={radius}
-          stroke="#E9E4D8"
+          stroke="#E2E8F0"
           strokeWidth={strokeWidth}
           fill="transparent"
         />
@@ -58,10 +58,10 @@ export const CircularProgressRing: React.FC<CircularProgressRingProps> = ({
       </svg>
       {/* Day / 90 Centered Text */}
       <div className="absolute inset-0 flex flex-col items-center justify-center text-center select-none pointer-events-none">
-        <span className="font-serif font-bold text-[14px] leading-none text-[#172319]">
+        <span className="font-serif font-bold text-[14px] leading-none text-[#111827]">
           {day}
         </span>
-        <span className="font-mono text-[8px] text-[#6B6F66] leading-none mt-0.5">
+        <span className="font-mono text-[8px] text-[#64748B] leading-none mt-0.5">
           /{totalDays}
         </span>
       </div>

@@ -1,53 +1,95 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   --font-serif: "Lora", Georgia, serif;
   --font-sans: "DM Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-mono: "JetBrains Mono", monospace;
 
-  --color-cream: #FAF7F0;
-  --color-cream-2: #F5F1E8;
-  --color-beige: #F0EBE1;
+  /* Official Be Bodywise Brand Palette (from bebodywise.com/shop/winter-care) */
+  --color-brand: #005995;
+  --color-brand-hover: #004777;
+  --color-brand-active: #00375C;
+  --color-brand-light: #E6F5FF;
+  --color-brand-border: #BADCF0;
+  --color-brand-sky: #4292C7;
+  --color-brand-navy: #143461;
+  --color-brand-warm: #EB6200;
+  --color-brand-amber: #D4924C;
+
+  /* Universal Semantic Tokens mapped to Be Bodywise aesthetic */
+  --color-cream: #FAFBFD;
+  --color-cream-2: #F0F6FA;
+  --color-beige: #E6F5FF;
   --color-card: #FFFFFF;
-  --color-ink: #172319;
-  --color-ink-2: #18231F;
-  --color-forest: #2C5044;
-  --color-forest-muted: #2E3E33;
-  --color-amber: #A46F39;
-  --color-amber-hover: #8F5E2D;
-  --color-amber-light: #E29D52;
-  --color-mint: #8EBEA6;
-  --color-mint-bg: #E8F1EC;
-  --color-toast-bg: #ECFEF2;
-  --color-peach-from: #EADCC2;
-  --color-peach-to: #EAC598;
-  --color-lavender-bg: #EEEAFB;
-  --color-lavender-text: #5B4BC4;
-  --color-muted-text: #6B6F66;
-  --color-line: #E9E4D8;
+  --color-ink: #111827;
+  --color-ink-2: #1E293B;
+  --color-forest: #005995;
+  --color-forest-muted: #143461;
+  --color-amber: #005995;
+  --color-amber-hover: #004777;
+  --color-amber-light: #D4924C;
+  --color-mint: #198775;
+  --color-mint-bg: #EDFCF5;
+  --color-toast-bg: #E6F5FF;
+  --color-peach-from: #F0F6FA;
+  --color-peach-to: #E6F5FF;
+  --color-lavender-bg: #EEF8FF;
+  --color-lavender-text: #225396;
+  --color-muted-text: #64748B;
+  --color-line: #E2E8F0;
 }
 
 :root {
-  --cream: #FAF7F0;
-  --cream-2: #F5F1E8;
-  --beige: #F0EBE1;
+  --brand: #005995;
+  --brand-hover: #004777;
+  --brand-light: #E6F5FF;
+  --brand-border: #BADCF0;
+  --brand-navy: #143461;
+  --cream: #FAFBFD;
+  --cream-2: #F0F6FA;
+  --beige: #E6F5FF;
   --card: #FFFFFF;
-  --ink: #172319;
-  --ink-2: #18231F;
-  --forest: #2C5044;
-  --forest-muted: #2E3E33;
-  --amber: #A46F39;
-  --amber-hover: #8F5E2D;
-  --amber-light: #E29D52;
-  --mint: #8EBEA6;
-  --mint-bg: #E8F1EC;
-  --toast-bg: #ECFEF2;
-  --peach-from: #EADCC2;
-  --peach-to: #EAC598;
-  --lavender-bg: #EEEAFB;
-  --lavender-text: #5B4BC4;
-  --muted-text: #6B6F66;
-  --line: #E9E4D8;
+  --ink: #111827;
+  --ink-2: #1E293B;
+  --forest: #005995;
+  --forest-muted: #143461;
+  --amber: #005995;
+  --amber-hover: #004777;
+  --amber-light: #D4924C;
+  --mint: #198775;
+  --mint-bg: #EDFCF5;
+  --toast-bg: #E6F5FF;
+  --peach-from: #F0F6FA;
+  --peach-to: #E6F5FF;
+  --lavender-bg: #EEF8FF;
+  --lavender-text: #225396;
+  --muted-text: #64748B;
+  --line: #E2E8F0;
+}
+
+html.dark {
+  --cream: #0B131B;
+  --cream-2: #101B26;
+  --beige: #172635;
+  --card: #121F2D;
+  --ink: #F1F5F9;
+  --ink-2: #FFFFFF;
+  --forest: #4292C7;
+  --forest-muted: #1E3A5F;
+  --amber: #4292C7;
+  --amber-hover: #60A5FA;
+  --amber-light: #D4924C;
+  --mint: #34D399;
+  --mint-bg: #064E3B;
+  --toast-bg: #102A43;
+  --peach-from: #1A2E42;
+  --peach-to: #233C55;
+  --lavender-bg: #1A2744;
+  --lavender-text: #93C5FD;
+  --muted-text: #94A3B8;
+  --line: #1E2E3E;
 }
 
 body {
@@ -56,6 +98,7 @@ body {
   font-family: "DM Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
   min-height: 100vh;
+  transition: background-color 0.25s ease, color 0.25s ease;
 }
 
 /* Custom scrollbar */
@@ -67,11 +110,11 @@ body {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #D9D2C3;
+  background: #CBD5E1;
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #A46F39;
+  background: #005995;
 }
 
 /* Continuous marquee animation */

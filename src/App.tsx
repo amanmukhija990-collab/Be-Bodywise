@@ -12,6 +12,11 @@ import { RoutineTestPage } from './pages/RoutineTestPage';
 import { ShelfPage } from './pages/ShelfPage';
 import { DecoderPage } from './pages/DecoderPage';
 import { JourneyPage } from './pages/JourneyPage';
+import { ProductDetailPage } from './pages/ProductDetailPage';
+import { CategoryPage } from './pages/CategoryPage';
+import { OrdersPage } from './pages/OrdersPage';
+
+import { CartDrawer } from './components/CartDrawer';
 
 // Protected Route wrapper that redirects unauthenticated users to /login
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -31,12 +36,17 @@ const AppLayout: React.FC = () => {
   const isAuthPage = location.pathname === '/login' || location.pathname === '/signup';
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#FAF7F0] text-[#172319] selection:bg-[#E29D52]/30 selection:text-[#172319]">
+    <div className="min-h-screen flex flex-col bg-[#FAFBFD] text-[#111827] selection:bg-[#005995]/20 selection:text-[#005995]">
       {!isAuthPage && <Navbar />}
       <main className="flex-1 flex flex-col">
         <Routes>
           {/* Public Routes */}
           <Route path="/" element={<LandingPage />} />
+          <Route path="/shop/all" element={<LandingPage />} />
+          <Route path="/category/:categoryId" element={<CategoryPage />} />
+          <Route path="/shop/:categoryId" element={<CategoryPage />} />
+          <Route path="/product/:slug" element={<ProductDetailPage />} />
+          <Route path="/match" element={<MatchPage />} />
           <Route path="/login" element={<AuthPage />} />
           <Route path="/signup" element={<AuthPage />} />
 
@@ -46,14 +56,6 @@ const AppLayout: React.FC = () => {
             element={
               <ProtectedRoute>
                 <DashboardPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/match"
-            element={
-              <ProtectedRoute>
-                <MatchPage />
               </ProtectedRoute>
             }
           />
@@ -89,6 +91,14 @@ const AppLayout: React.FC = () => {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/orders"
+            element={
+              <ProtectedRoute>
+                <OrdersPage />
+              </ProtectedRoute>
+            }
+          />
 
           {/* Catch-all */}
           <Route path="*" element={<Navigate to="/" replace />} />
@@ -96,6 +106,7 @@ const AppLayout: React.FC = () => {
       </main>
       {!isAuthPage && <Footer />}
       <ToastContainer />
+      <CartDrawer />
     </div>
   );
 };

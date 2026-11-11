@@ -138,6 +138,20 @@ export function runRoutineTest(candidate: CatalogueProduct, shelf: ShelfItem[]):
       continue;
     }
 
+    // Check oral gummy vs topical synergy (oral supplements never clash with topicals)
+    const isGummyA = candidate.id.includes('gummies') || candidate.name.toLowerCase().includes('gummi');
+    const isGummyB = (item.productId && item.productId.includes('gummies')) || shelfName.toLowerCase().includes('gummi');
+
+    if ((isGummyA && !isGummyB) || (!isGummyA && isGummyB)) {
+      comparisonItems.push({
+        shelfItemName: shelfName,
+        category: shelfCategory,
+        verdict: 'COMPLEMENTARY',
+        reason: 'Inside-Out Synergy: Oral nutritional gummies nourish cellular and follicular pathways internally without chemical pH conflict.',
+      });
+      continue;
+    }
+
     // Check actives clash
     const clashWarning = checkActivesClash(candidate.actives, shelfActives);
     if (clashWarning) {

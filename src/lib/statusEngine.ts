@@ -165,14 +165,14 @@ export function evaluateShelfItem(item: ShelfItem, referenceDateStr?: string): S
   } else if (status === 'lag_phase') {
     headline = "You are in the expected lag phase.";
     badgeLabel = "Expected lag phase";
-    badgeBg = "#FFF4E5";
+    badgeBg = "#E6F5FF";
     badgeText = "#B86E1D";
     dotColor = "#E29D52";
     explanation = `Day ${day} is in the classic dropout danger zone (Weeks 3–8). Most people quit here because outward changes are subtle, even though deep follicle and cellular pathways are actively shifting.`;
   } else if (status === 'on_track') {
     headline = "You are on track.";
     badgeLabel = "On track";
-    badgeBg = "#E8F1EC";
+    badgeBg = "#EDFCF5";
     badgeText = "#2C5044";
     dotColor = "#2C5044";
     explanation = `Day ${day} with ${consistency}% consistency and positive check-in scores. The active formulation is responding well with your routine.`;

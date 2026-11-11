@@ -1,19 +1,21 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { Eyebrow } from '../components/Eyebrow';
 import { CircularProgressRing } from '../components/CircularProgressRing';
 import { CATALOGUE_PRODUCTS } from '../data/catalogue';
-import { evaluateShelfItem, parseDate, getTodayDateStr } from '../lib/statusEngine';
-import { Category, ManualProduct, ShelfItem } from '../types';
+import { evaluateShelfItem, parseDate } from '../lib/statusEngine';
+import { Category, ManualProduct } from '../types';
+import { ProductImage } from '../components/ProductImage';
 import { 
-  Plus, MoreVertical, BookOpen, Edit2, Gauge, Check, X, Search, Camera, Sparkles, Trash2, Calendar 
+  Plus, MoreVertical, BookOpen, Edit2, Gauge, Check, X, Search, Sparkles, Trash2, Calendar 
 } from 'lucide-react';
 
 export const ShelfPage: React.FC = () => {
   const { 
     user, 
     logProductApplication, 
+    unlogProductApplication,
     addProductToShelf, 
     removeProductFromShelf, 
     updateShelfItemStartDate, 
@@ -23,7 +25,7 @@ export const ShelfPage: React.FC = () => {
   const navigate = useNavigate();
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [modalTab, setModalTab] = useState<'catalogue' | 'barcode' | 'manual'>('catalogue');
+  const [modalTab, setModalTab] = useState<'catalogue' | 'manual'>('catalogue');
 
   // Catalogue search in modal
   const [catalogueSearch, setCatalogueSearch] = useState('');
@@ -50,17 +52,10 @@ export const ShelfPage: React.FC = () => {
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [shelfSearch, setShelfSearch] = useState<string>('');
 
-  // Barcode scanner simulation & camera state
-  const [scanning, setScanning] = useState(false);
-  const [scannerError, setScannerError] = useState<string | null>(null);
-  const [cameraActive, setCameraActive] = useState<boolean>(false);
-  const videoRef = useRef<HTMLVideoElement | null>(null);
-
   const shelf = user?.shelf || [];
 
   // Compute stat metrics
   const totalProducts = shelf.length;
-
   let totalConsistency = 0;
   let loggedTodayCount = 0;
 
@@ -98,7 +93,7 @@ export const ShelfPage: React.FC = () => {
 
     addToast(
       `${product.name} is on your shelf`,
-      'Day 1 starts your timeline',
+      'Day 1 begins today',
       'success'
     );
     setIsAddModalOpen(false);
@@ -126,7 +121,7 @@ export const ShelfPage: React.FC = () => {
 
     addToast(
       `${manualData.name} added to My Shelf`,
-      'Manual formulation added with your start date',
+      'Custom formulation added',
       'success'
     );
 
@@ -144,22 +139,6 @@ export const ShelfPage: React.FC = () => {
     } else {
       setManualPurposes([...manualPurposes, p]);
     }
-  };
-
-  const startBarcodeScan = () => {
-    setScanning(true);
-    setScannerError(null);
-
-    // Simulate realistic barcode scan detection after 2 seconds
-    setTimeout(() => {
-      setScanning(false);
-      // Pick an un-added catalogue item or default to scalp clarify
-      const available = CATALOGUE_PRODUCTS.filter(p => !shelf.some(s => s.productId === p.id));
-      const target = available[0] || CATALOGUE_PRODUCTS[2];
-      if (target) {
-        handleAddCatalogueItem(target.id);
-      }
-    }, 1800);
   };
 
   const handleSaveEditedDate = () => {
@@ -190,22 +169,22 @@ export const ShelfPage: React.FC = () => {
   });
 
   return (
-    <div className="w-full max-w-[1280px] mx-auto px-5 sm:px-8 py-10 md:py-14">
+    <div className="w-full max-w-[1280px] mx-auto px-5 sm:px-8 py-8 md:py-12">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-10">
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
         <div>
           <Eyebrow className="mb-2">04 · MY SHELF · SINGLE SOURCE OF TRUTH</Eyebrow>
-          <h1 className="font-serif font-medium text-3xl sm:text-4xl text-[#172319] leading-tight">
-            Everything you own, <span className="italic font-normal text-[#A46F39]">on the clock.</span>
+          <h1 className="font-serif font-medium text-3xl sm:text-4xl text-[#111827] leading-tight">
+            Everything you own, <span className="italic font-normal text-[#005995]">on the clock.</span>
           </h1>
-          <p className="font-sans text-sm sm:text-base text-[#6B6F66] mt-2 max-w-2xl leading-relaxed">
-            Each product keeps its start date, instructions and consistency. The Decoder and your Care Journey read directly from here.
+          <p className="font-sans text-sm sm:text-base text-[#64748B] mt-2 max-w-2xl leading-relaxed">
+            Each formula keeps its start date, usage schedule and consistency logs. The Decoder reads directly from here.
           </p>
         </div>
 
         <button
           onClick={() => setIsAddModalOpen(true)}
-          className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#A46F39] hover:bg-[#8F5E2D] text-white font-sans font-medium text-sm transition-all shadow-md shadow-[#A46F39]/20 hover:-translate-y-0.5 self-start sm:self-auto cursor-pointer"
+          className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#005995] hover:bg-[#004777] text-white font-sans font-medium text-sm transition-all shadow-md shadow-[#A46F39]/20 hover:-translate-y-0.5 self-start sm:self-auto cursor-pointer"
         >
           <Plus className="w-4 h-4" />
           <span>Add product</span>
@@ -213,31 +192,31 @@ export const ShelfPage: React.FC = () => {
       </div>
 
       {/* Stat Cards (3) */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-10">
-        <div className="p-6 rounded-[22px] bg-white border border-[#E9E4D8] shadow-2xs">
-          <p className="font-serif font-bold text-3xl sm:text-4xl text-[#172319]">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+        <div className="p-5 rounded-[22px] bg-white border border-[#E2E8F0] shadow-2xs">
+          <p className="font-serif font-bold text-3xl text-[#111827]">
             {totalProducts}
           </p>
-          <p className="font-mono text-[10px] uppercase tracking-widest text-[#6B6F66] mt-1 font-semibold">
-            PRODUCTS
+          <p className="font-mono text-[10px] uppercase tracking-widest text-[#64748B] mt-1 font-semibold">
+            SHELF FORMULAS
           </p>
         </div>
 
-        <div className="p-6 rounded-[22px] bg-white border border-[#E9E4D8] shadow-2xs">
-          <p className="font-serif font-bold text-3xl sm:text-4xl text-[#172319]">
+        <div className="p-5 rounded-[22px] bg-white border border-[#E2E8F0] shadow-2xs">
+          <p className="font-serif font-bold text-3xl text-[#111827]">
             {avgConsistency}%
           </p>
-          <p className="font-mono text-[10px] uppercase tracking-widest text-[#6B6F66] mt-1 font-semibold">
-            AVG. CONSISTENCY
+          <p className="font-mono text-[10px] uppercase tracking-widest text-[#64748B] mt-1 font-semibold">
+            AVERAGE CONSISTENCY
           </p>
         </div>
 
-        <div className="p-6 rounded-[22px] bg-white border border-[#E9E4D8] shadow-2xs">
-          <p className="font-serif font-bold text-3xl sm:text-4xl text-[#172319]">
+        <div className="p-5 rounded-[22px] bg-white border border-[#E2E8F0] shadow-2xs">
+          <p className="font-serif font-bold text-3xl text-[#111827]">
             {loggedTodayCount}/{totalProducts}
           </p>
-          <p className="font-mono text-[10px] uppercase tracking-widest text-[#6B6F66] mt-1 font-semibold">
-            LOGGED TODAY
+          <p className="font-mono text-[10px] uppercase tracking-widest text-[#64748B] mt-1 font-semibold">
+            APPLIED TODAY
           </p>
         </div>
       </div>
@@ -246,7 +225,7 @@ export const ShelfPage: React.FC = () => {
       <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 mb-8">
         <div className="flex flex-wrap items-center gap-2">
           {/* Category Tabs */}
-          <div className="inline-flex items-center bg-[#F0EBE1] p-1 rounded-full border border-[#E9E4D8]">
+          <div className="inline-flex items-center bg-[#E6F5FF] p-1 rounded-full border border-[#E2E8F0]">
             {[
               { id: 'all', label: 'All' },
               { id: 'hair', label: 'Hair' },
@@ -258,8 +237,8 @@ export const ShelfPage: React.FC = () => {
                 onClick={() => setFilterCategory(cat.id)}
                 className={`px-3.5 py-1.5 rounded-full font-sans text-xs font-semibold capitalize transition-all cursor-pointer ${
                   filterCategory === cat.id
-                    ? 'bg-white text-[#172319] shadow-xs'
-                    : 'text-[#6B6F66] hover:text-[#172319]'
+                    ? 'bg-white text-[#111827] shadow-xs'
+                    : 'text-[#64748B] hover:text-[#111827]'
                 }`}
               >
                 {cat.label}
@@ -271,56 +250,55 @@ export const ShelfPage: React.FC = () => {
           <select
             value={filterStatus}
             onChange={e => setFilterStatus(e.target.value)}
-            className="px-3 py-1.5 rounded-full bg-white border border-[#E9E4D8] text-xs font-sans text-[#172319] outline-none cursor-pointer focus:ring-2 focus:ring-[#A46F39]"
+            className="px-3 py-1.5 rounded-full bg-white border border-[#E2E8F0] text-xs font-sans text-[#111827] outline-none cursor-pointer focus:ring-2 focus:ring-[#005995]"
           >
             <option value="all">All Statuses</option>
             <option value="too_early">Too early</option>
             <option value="lag_phase">Expected lag phase</option>
             <option value="on_track">On track</option>
             <option value="review_usage">Review usage</option>
-            <option value="professional_help">Consider professional help</option>
           </select>
         </div>
 
         {/* Search */}
         <div className="relative w-full md:w-64">
-          <Search className="w-3.5 h-3.5 text-[#6B6F66] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+          <Search className="w-3.5 h-3.5 text-[#64748B] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
           <input
             type="text"
             value={shelfSearch}
             onChange={e => setShelfSearch(e.target.value)}
             placeholder="Search shelf formulas…"
-            className="w-full pl-8 pr-3 py-1.5 rounded-full bg-white border border-[#E9E4D8] text-xs text-[#172319] focus:outline-none focus:ring-2 focus:ring-[#A46F39]"
+            className="w-full pl-8 pr-3 py-1.5 rounded-full bg-white border border-[#E2E8F0] text-xs text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#005995]"
           />
         </div>
       </div>
 
-      {/* Product Cards Grid (3 columns) */}
+      {/* Product Cards Grid */}
       {totalProducts === 0 ? (
-        <div className="bg-white rounded-3xl border border-[#E9E4D8] p-12 text-center max-w-xl mx-auto shadow-sm">
-          <div className="w-14 h-14 rounded-full bg-[#FAF7F0] flex items-center justify-center mx-auto mb-4 text-[#A46F39]">
+        <div className="bg-white rounded-3xl border border-[#E2E8F0] p-12 text-center max-w-xl mx-auto shadow-sm">
+          <div className="w-14 h-14 rounded-full bg-[#FAFBFD] flex items-center justify-center mx-auto mb-4 text-[#005995]">
             <Sparkles className="w-6 h-6" />
           </div>
-          <h3 className="font-serif font-semibold text-2xl text-[#172319] mb-2">
+          <h3 className="font-serif font-semibold text-2xl text-[#111827] mb-2">
             Your shelf is waiting
           </h3>
-          <p className="font-sans text-sm text-[#6B6F66] mb-6">
-            Add what you currently own or plan to use so we can set your verified 90-day clocks and consistency schedules.
+          <p className="font-sans text-sm text-[#64748B] mb-6">
+            Add what you currently use so we can set your 90-day clocks and consistency schedules.
           </p>
           <button
             onClick={() => setIsAddModalOpen(true)}
-            className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#172319] text-white text-xs font-semibold hover:bg-[#2C5044] transition-all cursor-pointer"
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#143461] text-white text-xs font-semibold hover:bg-[#005995] transition-all cursor-pointer"
           >
             <Plus className="w-4 h-4" />
             <span>Add your first product</span>
           </button>
         </div>
       ) : filteredShelf.length === 0 ? (
-        <div className="bg-white rounded-3xl border border-[#E9E4D8] p-10 text-center max-w-md mx-auto shadow-2xs">
-          <p className="font-serif font-semibold text-lg text-[#172319] mb-1">
+        <div className="bg-white rounded-3xl border border-[#E2E8F0] p-10 text-center max-w-md mx-auto shadow-2xs">
+          <p className="font-serif font-semibold text-lg text-[#111827] mb-1">
             No formulas match your filters
           </p>
-          <p className="font-sans text-xs text-[#6B6F66] mb-4">
+          <p className="font-sans text-xs text-[#64748B] mb-4">
             Try resetting your category or status filter to see all active shelf items.
           </p>
           <button
@@ -329,7 +307,7 @@ export const ShelfPage: React.FC = () => {
               setFilterStatus('all');
               setShelfSearch('');
             }}
-            className="px-4 py-2 rounded-full border border-[#E9E4D8] text-xs font-semibold text-[#172319] hover:bg-[#F5F1E8]"
+            className="px-4 py-2 rounded-full border border-[#E2E8F0] text-xs font-semibold text-[#111827] hover:bg-[#F0F6FA]"
           >
             Reset filters
           </button>
@@ -357,17 +335,18 @@ export const ShelfPage: React.FC = () => {
             return (
               <div
                 key={item.id}
-                className="bg-white rounded-[24px] border border-[#E9E4D8] overflow-hidden shadow-2xs hover:shadow-md transition-all flex flex-col justify-between relative"
+                className="bg-white rounded-[24px] border border-[#E2E8F0] overflow-hidden shadow-2xs hover:shadow-md transition-all flex flex-col justify-between relative"
               >
                 <div>
                   {/* Top Image + Category Pill + Menu */}
-                  <div className="relative h-48 w-full bg-[#F0EBE1] overflow-hidden">
-                    <img
+                  <div className="relative h-48 w-full bg-[#E6F5FF] overflow-hidden">
+                    <ProductImage
                       src={image}
                       alt={productName}
-                      className="w-full h-full object-cover"
+                      category={category}
+                      className="w-full h-full"
                     />
-                    <div className="absolute top-3 left-3 px-3 py-1 rounded-full bg-white/90 backdrop-blur-md text-[#172319] font-mono text-[9px] uppercase tracking-wider font-bold shadow-xs">
+                    <div className="absolute top-3 left-3 px-3 py-1 rounded-full bg-white/90 backdrop-blur-md text-[#111827] font-mono text-[9px] uppercase tracking-wider font-bold shadow-xs z-10">
                       {category}
                     </div>
 
@@ -375,7 +354,7 @@ export const ShelfPage: React.FC = () => {
                     <div className="absolute top-3 right-3">
                       <button
                         onClick={() => setActiveMenuId(activeMenuId === item.id ? null : item.id)}
-                        className="w-8 h-8 rounded-full bg-white/90 backdrop-blur-md flex items-center justify-center text-[#172319] hover:bg-white shadow-xs transition-colors cursor-pointer"
+                        className="w-8 h-8 rounded-full bg-white/90 backdrop-blur-md flex items-center justify-center text-[#111827] hover:bg-white shadow-xs transition-colors cursor-pointer"
                         aria-label="Options"
                       >
                         <MoreVertical className="w-4 h-4" />
@@ -383,16 +362,16 @@ export const ShelfPage: React.FC = () => {
 
                       {/* Dropdown menu */}
                       {activeMenuId === item.id && (
-                        <div className="absolute right-0 mt-2 w-48 bg-white rounded-2xl shadow-xl border border-[#E9E4D8] p-1.5 z-30 animate-in fade-in zoom-in-95">
+                        <div className="absolute right-0 mt-2 w-48 bg-white rounded-2xl shadow-xl border border-[#E2E8F0] p-1.5 z-30 animate-in fade-in zoom-in-95">
                           <button
                             onClick={() => {
                               setEditingDateItemId(item.id);
                               setEditDateValue(item.startDate);
                               setActiveMenuId(null);
                             }}
-                            className="w-full flex items-center gap-2 px-3 py-2 text-xs text-[#172319] rounded-xl hover:bg-[#F5F1E8] transition-colors text-left"
+                            className="w-full flex items-center gap-2 px-3 py-2 text-xs text-[#111827] rounded-xl hover:bg-[#F0F6FA] transition-colors text-left"
                           >
-                            <Calendar className="w-3.5 h-3.5 text-[#A46F39]" />
+                            <Calendar className="w-3.5 h-3.5 text-[#005995]" />
                             <span>Edit start date</span>
                           </button>
                           <button
@@ -400,9 +379,9 @@ export const ShelfPage: React.FC = () => {
                               navigate(`/decoder?item=${item.id}`);
                               setActiveMenuId(null);
                             }}
-                            className="w-full flex items-center gap-2 px-3 py-2 text-xs text-[#172319] rounded-xl hover:bg-[#F5F1E8] transition-colors text-left"
+                            className="w-full flex items-center gap-2 px-3 py-2 text-xs text-[#111827] rounded-xl hover:bg-[#F0F6FA] transition-colors text-left"
                           >
-                            <Gauge className="w-3.5 h-3.5 text-[#2C5044]" />
+                            <Gauge className="w-3.5 h-3.5 text-[#198775]" />
                             <span>View in Decoder</span>
                           </button>
                           <button
@@ -425,14 +404,14 @@ export const ShelfPage: React.FC = () => {
                     {/* Title & Progress Ring */}
                     <div className="flex items-start justify-between gap-3 mb-3">
                       <div>
-                        <h3 className="font-serif font-semibold text-lg text-[#172319] leading-snug line-clamp-1">
+                        <h3 className="font-serif font-semibold text-lg text-[#111827] leading-snug line-clamp-1">
                           {productName}
                         </h3>
-                        <div className="flex items-center gap-1.5 text-xs text-[#6B6F66] mt-1 font-sans">
+                        <div className="flex items-center gap-1.5 text-xs text-[#64748B] mt-1 font-sans">
                           {isCatalogue ? (
-                            <BookOpen className="w-3.5 h-3.5 text-[#6B6F66]" />
+                            <BookOpen className="w-3.5 h-3.5 text-[#64748B]" />
                           ) : (
-                            <Edit2 className="w-3.5 h-3.5 text-[#6B6F66]" />
+                            <Edit2 className="w-3.5 h-3.5 text-[#64748B]" />
                           )}
                           <span>Started {formatDateDisplay(item.startDate)}</span>
                         </div>
@@ -443,7 +422,6 @@ export const ShelfPage: React.FC = () => {
 
                     {/* Chips Row: Status + Timing + Frequency */}
                     <div className="flex flex-wrap items-center gap-2 mb-4">
-                      {/* Status Chip */}
                       <span
                         className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-sans font-medium"
                         style={{ backgroundColor: evalData.badgeBg, color: evalData.badgeText }}
@@ -455,33 +433,31 @@ export const ShelfPage: React.FC = () => {
                         <span>{evalData.badgeLabel}</span>
                       </span>
 
-                      {/* Timing Chip */}
-                      <span className="px-2.5 py-1 rounded-full bg-[#F5F1E8] text-[#172319] font-sans text-[11px] font-medium">
+                      <span className="px-2.5 py-1 rounded-full bg-[#F0F6FA] text-[#111827] font-sans text-[11px] font-medium">
                         {item.when}
                       </span>
 
-                      {/* Frequency Chip */}
-                      <span className="px-2.5 py-1 rounded-full bg-[#F5F1E8] text-[#172319] font-sans text-[11px] font-medium">
+                      <span className="px-2.5 py-1 rounded-full bg-[#F0F6FA] text-[#111827] font-sans text-[11px] font-medium">
                         {item.frequency}
                       </span>
                     </div>
 
                     {/* Instructions */}
-                    <p className="font-sans text-xs text-[#6B6F66] leading-relaxed line-clamp-2 mb-5">
+                    <p className="font-sans text-xs text-[#64748B] leading-relaxed line-clamp-2 mb-4">
                       {item.instructions || 'Apply as directed.'}
                     </p>
 
                     {/* Consistency Progress Bar */}
-                    <div className="pt-2 border-t border-[#E9E4D8]/80 mb-5">
+                    <div className="pt-2 border-t border-[#E2E8F0]/80 mb-4">
                       <div className="flex items-center justify-between text-xs mb-1.5">
-                        <span className="font-sans text-[#6B6F66]">Consistency (28 days)</span>
-                        <span className="font-sans font-semibold text-[#172319]">
-                          {evalData.consistency}%
+                        <span className="font-sans text-[#64748B]">Consistency</span>
+                        <span className="font-sans font-semibold text-[#111827]">
+                          {evalData.consistency}% ({item.logs?.length || 0} days)
                         </span>
                       </div>
-                      <div className="w-full h-1.5 bg-[#E9E4D8] rounded-full overflow-hidden">
+                      <div className="w-full h-1.5 bg-[#E2E8F0] rounded-full overflow-hidden">
                         <div
-                          className="h-full bg-[#2C5044] rounded-full transition-all duration-500"
+                          className="h-full bg-[#005995] rounded-full transition-all duration-500"
                           style={{ width: `${evalData.consistency}%` }}
                         />
                       </div>
@@ -491,33 +467,33 @@ export const ShelfPage: React.FC = () => {
 
                 {/* Actions */}
                 <div className="p-6 pt-0 flex items-center gap-2.5">
-                  <button
-                    type="button"
-                    onClick={() => logProductApplication(item.id)}
-                    disabled={isLoggedToday}
-                    className={`flex-1 inline-flex items-center justify-center gap-2 py-3 px-4 rounded-full font-sans text-xs font-semibold transition-all shadow-xs cursor-pointer ${
-                      isLoggedToday
-                        ? 'bg-[#E8F1EC] text-[#2C5044] cursor-default'
-                        : 'bg-[#172319] hover:bg-[#2C5044] text-white hover:-translate-y-0.5'
-                    }`}
-                  >
-                    {isLoggedToday ? (
-                      <>
-                        <Check className="w-4 h-4" />
-                        <span>✓ Logged today</span>
-                      </>
-                    ) : (
-                      <span>Log today's application</span>
-                    )}
-                  </button>
+                  {isLoggedToday ? (
+                    <button
+                      type="button"
+                      onClick={() => unlogProductApplication(item.id)}
+                      className="flex-1 inline-flex items-center justify-center gap-2 py-3 px-4 rounded-full font-sans text-xs font-semibold bg-[#EDFCF5] hover:bg-[#d5e7dc] text-[#198775] transition-all shadow-xs cursor-pointer"
+                      title="Click to unmark if logged by accident"
+                    >
+                      <Check className="w-4 h-4" />
+                      <span>✓ Applied today (tap to unlog)</span>
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => logProductApplication(item.id)}
+                      className="flex-1 inline-flex items-center justify-center gap-2 py-3 px-4 rounded-full font-sans text-xs font-semibold bg-[#005995] hover:bg-[#004777] text-white hover:-translate-y-0.5 transition-all shadow-xs cursor-pointer"
+                    >
+                      <span>+ Log today's application</span>
+                    </button>
+                  )}
 
                   <button
                     type="button"
                     onClick={() => navigate(`/decoder?item=${item.id}`)}
-                    className="w-10 h-10 rounded-full border border-[#E9E4D8] hover:border-[#172319] flex items-center justify-center text-[#172319] hover:bg-[#F5F1E8] transition-colors shrink-0 shadow-2xs cursor-pointer"
+                    className="w-10 h-10 rounded-full border border-[#E2E8F0] hover:border-[#005995] flex items-center justify-center text-[#111827] hover:bg-[#F0F6FA] transition-colors shrink-0 shadow-2xs cursor-pointer"
                     title="View in Results Decoder"
                   >
-                    <Gauge className="w-4 h-4 text-[#A46F39]" />
+                    <Gauge className="w-4 h-4 text-[#005995]" />
                   </button>
                 </div>
               </div>
@@ -526,61 +502,64 @@ export const ShelfPage: React.FC = () => {
         </div>
       )}
 
-      {/* ADD TO MY SHELF MODAL */}
+      {/* ADD TO MY SHELF MODAL (Barcode scanner removed as requested) */}
       {isAddModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#172319]/60 backdrop-blur-sm animate-in fade-in">
-          <div className="bg-white rounded-[24px] max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 sm:p-8 shadow-2xl border border-[#E9E4D8] relative">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#005995]/60 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-white rounded-[24px] max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 sm:p-8 shadow-2xl border border-[#E2E8F0] relative">
             {/* Modal Header */}
             <div className="flex items-start justify-between gap-4 mb-6">
               <div>
-                <h3 className="font-serif font-semibold text-2xl text-[#172319]">
+                <h3 className="font-serif font-semibold text-2xl text-[#111827]">
                   Add to My Shelf
                 </h3>
-                <p className="font-sans text-xs sm:text-sm text-[#6B6F66] mt-1">
-                  Your start date is the single piece of data that unlocks the Decoder and your Care Journey.
+                <p className="font-sans text-xs sm:text-sm text-[#64748B] mt-1">
+                  Choose from our verified clinical catalogue or record your own custom formula.
                 </p>
               </div>
 
               <button
                 onClick={() => setIsAddModalOpen(false)}
-                className="w-8 h-8 rounded-full bg-[#F5F1E8] text-[#172319] flex items-center justify-center hover:bg-[#E9E4D8] transition-colors cursor-pointer"
+                className="w-8 h-8 rounded-full bg-[#F0F6FA] text-[#111827] flex items-center justify-center hover:bg-[#E2E8F0] transition-colors cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            {/* Segmented Tabs */}
-            <div className="inline-flex w-full bg-[#F0EBE1] p-1 rounded-full border border-[#E9E4D8] mb-6">
-              {[
-                { id: 'catalogue', label: 'Catalogue' },
-                { id: 'barcode', label: 'Scan barcode' },
-                { id: 'manual', label: 'Manual' },
-              ].map(t => (
-                <button
-                  key={t.id}
-                  onClick={() => setModalTab(t.id as any)}
-                  className={`flex-1 py-2 rounded-full font-sans text-xs font-semibold transition-all cursor-pointer ${
-                    modalTab === t.id
-                      ? 'bg-white text-[#172319] shadow-xs'
-                      : 'text-[#6B6F66] hover:text-[#172319]'
-                  }`}
-                >
-                  {t.label}
-                </button>
-              ))}
+            {/* Segmented Tabs (Catalogue vs Manual) */}
+            <div className="inline-flex w-full bg-[#E6F5FF] p-1 rounded-full border border-[#E2E8F0] mb-6">
+              <button
+                onClick={() => setModalTab('catalogue')}
+                className={`flex-1 py-2 rounded-full font-sans text-xs font-semibold transition-all cursor-pointer ${
+                  modalTab === 'catalogue'
+                    ? 'bg-white text-[#111827] shadow-xs'
+                    : 'text-[#64748B] hover:text-[#111827]'
+                }`}
+              >
+                From Catalogue
+              </button>
+              <button
+                onClick={() => setModalTab('manual')}
+                className={`flex-1 py-2 rounded-full font-sans text-xs font-semibold transition-all cursor-pointer ${
+                  modalTab === 'manual'
+                    ? 'bg-white text-[#111827] shadow-xs'
+                    : 'text-[#64748B] hover:text-[#111827]'
+                }`}
+              >
+                Custom Product
+              </button>
             </div>
 
             {/* TAB 1: CATALOGUE */}
             {modalTab === 'catalogue' && (
               <div>
                 <div className="relative mb-4">
-                  <Search className="w-4 h-4 text-[#6B6F66] absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <Search className="w-4 h-4 text-[#64748B] absolute left-3.5 top-1/2 -translate-y-1/2" />
                   <input
                     type="text"
                     value={catalogueSearch}
                     onChange={e => setCatalogueSearch(e.target.value)}
-                    placeholder="Search serum, shampoo, niacinamide…"
-                    className="w-full pl-9 pr-4 py-2.5 rounded-full bg-[#FAF7F0] border border-[#E9E4D8] text-xs focus:outline-none focus:ring-2 focus:ring-[#A46F39]"
+                    placeholder="Search gummies, serum, shampoo, niacinamide…"
+                    className="w-full pl-9 pr-4 py-2.5 rounded-full bg-[#FAFBFD] border border-[#E2E8F0] text-xs focus:outline-none focus:ring-2 focus:ring-[#005995]"
                   />
                 </div>
 
@@ -600,35 +579,36 @@ export const ShelfPage: React.FC = () => {
                         key={prod.id}
                         className={`p-3 rounded-2xl border transition-all flex items-center justify-between gap-4 ${
                           isAlreadyOnShelf
-                            ? 'bg-[#FAF7F0] border-[#E9E4D8] opacity-60'
-                            : 'bg-white border-[#E9E4D8] hover:border-[#A46F39] hover:shadow-xs cursor-pointer'
+                            ? 'bg-[#FAFBFD] border-[#E2E8F0] opacity-60'
+                            : 'bg-white border-[#E2E8F0] hover:border-[#005995] hover:shadow-xs cursor-pointer'
                         }`}
                         onClick={() => {
                           if (!isAlreadyOnShelf) handleAddCatalogueItem(prod.id);
                         }}
                       >
                         <div className="flex items-center gap-3 min-w-0">
-                          <img
+                          <ProductImage
                             src={prod.image}
                             alt={prod.name}
-                            className="w-12 h-12 rounded-xl object-cover shrink-0 bg-[#F0EBE1]"
+                            category={prod.category}
+                            className="w-12 h-12 rounded-xl shrink-0"
                           />
                           <div className="min-w-0">
-                            <p className="font-sans font-semibold text-xs sm:text-sm text-[#172319] truncate">
+                            <p className="font-sans font-semibold text-xs sm:text-sm text-[#111827] truncate">
                               {prod.name}
                             </p>
-                            <p className="font-mono text-[10px] text-[#6B6F66] uppercase truncate">
+                            <p className="font-mono text-[10px] text-[#64748B] uppercase truncate">
                               {prod.category} · {prod.actives.slice(0, 2).join(' + ')} · ₹{prod.price}
                             </p>
                           </div>
                         </div>
 
                         {isAlreadyOnShelf ? (
-                          <span className="font-mono text-[10px] uppercase font-bold text-[#6B6F66] shrink-0">
+                          <span className="font-mono text-[10px] uppercase font-bold text-[#64748B] shrink-0">
                             On shelf
                           </span>
                         ) : (
-                          <span className="px-3 py-1 rounded-full bg-[#FAF7F0] text-[#A46F39] font-mono text-[10px] font-bold uppercase hover:bg-[#A46F39] hover:text-white transition-colors shrink-0">
+                          <span className="px-3 py-1 rounded-full bg-[#FAFBFD] text-[#005995] font-mono text-[10px] font-bold uppercase hover:bg-[#A46F39] hover:text-white transition-colors shrink-0">
                             + Add
                           </span>
                         )}
@@ -639,106 +619,11 @@ export const ShelfPage: React.FC = () => {
               </div>
             )}
 
-            {/* TAB 2: SCAN BARCODE */}
-            {modalTab === 'barcode' && (
-              <div className="flex flex-col items-center text-center py-4">
-                <div className="w-[300px] h-[200px] rounded-2xl bg-[#172319] border-2 border-dashed border-[#E29D52]/60 relative flex flex-col items-center justify-center overflow-hidden mb-5 shadow-inner">
-                  {/* Amber corner brackets */}
-                  <div className="absolute top-2 left-2 w-4 h-4 border-t-2 border-l-2 border-[#E29D52] z-20" />
-                  <div className="absolute top-2 right-2 w-4 h-4 border-t-2 border-r-2 border-[#E29D52] z-20" />
-                  <div className="absolute bottom-2 left-2 w-4 h-4 border-b-2 border-l-2 border-[#E29D52] z-20" />
-                  <div className="absolute bottom-2 right-2 w-4 h-4 border-b-2 border-r-2 border-[#E29D52] z-20" />
-
-                  {/* Video Preview if camera active */}
-                  <video
-                    ref={videoRef}
-                    playsInline
-                    autoPlay
-                    muted
-                    className={`absolute inset-0 w-full h-full object-cover ${cameraActive ? 'block' : 'hidden'}`}
-                  />
-
-                  {/* Scanning beam */}
-                  {(scanning || cameraActive) && (
-                    <div className="absolute inset-x-0 h-0.5 bg-[#E29D52] shadow-[0_0_10px_#E29D52] animate-pulse z-10 top-1/2" />
-                  )}
-
-                  {scanning ? (
-                    <div className="relative z-20 flex flex-col items-center bg-black/60 px-4 py-3 rounded-xl backdrop-blur-xs">
-                      <div className="w-8 h-8 rounded-full border-2 border-[#E29D52] border-t-transparent animate-spin mb-2" />
-                      <p className="font-mono text-xs uppercase text-[#E29D52] tracking-wider animate-pulse">
-                        Decoding EAN-13…
-                      </p>
-                    </div>
-                  ) : !cameraActive ? (
-                    <div className="relative z-10 flex flex-col items-center p-4">
-                      <Camera className="w-8 h-8 text-[#E29D52] mb-2" />
-                      <p className="font-serif italic text-sm text-white leading-tight">
-                        Point camera at the barcode on the pack
-                      </p>
-                      <p className="font-mono text-[9px] text-white/50 uppercase tracking-widest mt-1">
-                        EAN-13 AUTO-DETECT
-                      </p>
-                    </div>
-                  ) : null}
-                </div>
-
-                {scannerError && (
-                  <p className="font-sans text-xs text-[#B4492E] mb-3">{scannerError}</p>
-                )}
-
-                <div className="flex flex-wrap items-center justify-center gap-3">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (!cameraActive) {
-                        navigator.mediaDevices?.getUserMedia({ video: { facingMode: 'environment' } })
-                          .then(stream => {
-                            setCameraActive(true);
-                            setScannerError(null);
-                            if (videoRef.current) {
-                              videoRef.current.srcObject = stream;
-                              videoRef.current.play();
-                            }
-                            // Auto detect after 3 seconds of camera
-                            setTimeout(() => {
-                              startBarcodeScan();
-                            }, 3000);
-                          })
-                          .catch(() => {
-                            setScannerError('Camera unavailable in current sandbox. Using optical simulation.');
-                            startBarcodeScan();
-                          });
-                      } else {
-                        startBarcodeScan();
-                      }
-                    }}
-                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#172319] text-white font-sans text-xs font-semibold hover:bg-[#2C5044] transition-all cursor-pointer shadow-xs"
-                  >
-                    <Camera className="w-4 h-4 text-[#E29D52]" />
-                    <span>{cameraActive ? 'Capture & Decode' : 'Start Camera Scanner'}</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={startBarcodeScan}
-                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white border border-[#E9E4D8] text-[#172319] font-sans text-xs font-semibold hover:bg-[#F5F1E8] transition-all cursor-pointer shadow-2xs"
-                  >
-                    <span>Instant Sample Scan</span>
-                  </button>
-                </div>
-
-                <p className="font-sans text-[11px] text-[#6B6F66] mt-4 max-w-sm">
-                  Or switch to <span className="font-semibold text-[#172319]">Catalogue</span> or <span className="font-semibold text-[#172319]">Manual</span> if packaging is out of reach.
-                </p>
-              </div>
-            )}
-
-            {/* TAB 3: MANUAL */}
+            {/* TAB 2: MANUAL */}
             {modalTab === 'manual' && (
               <form onSubmit={handleAddManualProduct} className="flex flex-col gap-4 text-left">
                 <div>
-                  <label className="block font-mono text-[10px] uppercase tracking-wider text-[#172319] font-bold mb-1">
+                  <label className="block font-mono text-[10px] uppercase tracking-wider text-[#111827] font-bold mb-1">
                     PRODUCT NAME *
                   </label>
                   <input
@@ -747,19 +632,19 @@ export const ShelfPage: React.FC = () => {
                     value={manualName}
                     onChange={e => setManualName(e.target.value)}
                     placeholder="e.g. My Vitamin C 20% Serum"
-                    className="w-full px-4 py-2.5 rounded-xl bg-[#FAF7F0] border border-[#E9E4D8] text-xs focus:ring-2 focus:ring-[#A46F39] outline-none"
+                    className="w-full px-4 py-2.5 rounded-xl bg-[#FAFBFD] border border-[#E2E8F0] text-xs focus:ring-2 focus:ring-[#005995] outline-none"
                   />
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block font-mono text-[10px] uppercase tracking-wider text-[#172319] font-bold mb-1">
+                    <label className="block font-mono text-[10px] uppercase tracking-wider text-[#111827] font-bold mb-1">
                       CATEGORY
                     </label>
                     <select
                       value={manualCategory}
                       onChange={e => setManualCategory(e.target.value as Category)}
-                      className="w-full px-4 py-2.5 rounded-xl bg-[#FAF7F0] border border-[#E9E4D8] text-xs focus:ring-2 focus:ring-[#A46F39] outline-none"
+                      className="w-full px-4 py-2.5 rounded-xl bg-[#FAFBFD] border border-[#E2E8F0] text-xs focus:ring-2 focus:ring-[#005995] outline-none"
                     >
                       <option value="skin">Skin</option>
                       <option value="hair">Hair</option>
@@ -768,13 +653,13 @@ export const ShelfPage: React.FC = () => {
                   </div>
 
                   <div>
-                    <label className="block font-mono text-[10px] uppercase tracking-wider text-[#172319] font-bold mb-1">
-                      HOW OFTEN
+                    <label className="block font-mono text-[10px] uppercase tracking-wider text-[#111827] font-bold mb-1">
+                      FREQUENCY
                     </label>
                     <select
                       value={manualFrequency}
                       onChange={e => setManualFrequency(e.target.value)}
-                      className="w-full px-4 py-2.5 rounded-xl bg-[#FAF7F0] border border-[#E9E4D8] text-xs focus:ring-2 focus:ring-[#A46F39] outline-none"
+                      className="w-full px-4 py-2.5 rounded-xl bg-[#FAFBFD] border border-[#E2E8F0] text-xs focus:ring-2 focus:ring-[#005995] outline-none"
                     >
                       <option value="Daily">Daily</option>
                       <option value="2+ a week">2+ a week</option>
@@ -784,7 +669,7 @@ export const ShelfPage: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block font-mono text-[10px] uppercase tracking-wider text-[#172319] font-bold mb-2">
+                  <label className="block font-mono text-[10px] uppercase tracking-wider text-[#111827] font-bold mb-2">
                     WHAT IS IT FOR?
                   </label>
                   <div className="flex flex-wrap gap-2">
@@ -805,8 +690,8 @@ export const ShelfPage: React.FC = () => {
                           onClick={() => togglePurpose(p)}
                           className={`px-3 py-1.5 rounded-full text-[11px] font-sans font-medium transition-all cursor-pointer ${
                             isSelected
-                              ? 'bg-[#2C5044] text-white shadow-2xs'
-                              : 'bg-[#F0EBE1] text-[#172319] hover:bg-[#E9E4D8]'
+                              ? 'bg-[#005995] text-white shadow-2xs'
+                              : 'bg-[#E6F5FF] text-[#111827] hover:bg-[#E2E8F0]'
                           }`}
                         >
                           {p}
@@ -818,7 +703,7 @@ export const ShelfPage: React.FC = () => {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block font-mono text-[10px] uppercase tracking-wider text-[#172319] font-bold mb-1">
+                    <label className="block font-mono text-[10px] uppercase tracking-wider text-[#111827] font-bold mb-1">
                       KEY ACTIVES
                     </label>
                     <input
@@ -826,18 +711,18 @@ export const ShelfPage: React.FC = () => {
                       value={manualActives}
                       onChange={e => setManualActives(e.target.value)}
                       placeholder="e.g. Vitamin C, Ferulic Acid"
-                      className="w-full px-4 py-2.5 rounded-xl bg-[#FAF7F0] border border-[#E9E4D8] text-xs focus:ring-2 focus:ring-[#A46F39] outline-none"
+                      className="w-full px-4 py-2.5 rounded-xl bg-[#FAFBFD] border border-[#E2E8F0] text-xs focus:ring-2 focus:ring-[#005995] outline-none"
                     />
                   </div>
 
                   <div>
-                    <label className="block font-mono text-[10px] uppercase tracking-wider text-[#172319] font-bold mb-1">
+                    <label className="block font-mono text-[10px] uppercase tracking-wider text-[#111827] font-bold mb-1">
                       WHEN
                     </label>
                     <select
                       value={manualWhen}
                       onChange={e => setManualWhen(e.target.value)}
-                      className="w-full px-4 py-2.5 rounded-xl bg-[#FAF7F0] border border-[#E9E4D8] text-xs focus:ring-2 focus:ring-[#A46F39] outline-none"
+                      className="w-full px-4 py-2.5 rounded-xl bg-[#FAFBFD] border border-[#E2E8F0] text-xs focus:ring-2 focus:ring-[#005995] outline-none"
                     >
                       <option value="AM">AM</option>
                       <option value="PM">PM</option>
@@ -848,19 +733,19 @@ export const ShelfPage: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block font-mono text-[10px] uppercase tracking-wider text-[#172319] font-bold mb-1">
+                  <label className="block font-mono text-[10px] uppercase tracking-wider text-[#111827] font-bold mb-1">
                     START DATE
                   </label>
                   <input
                     type="date"
                     value={manualStartDate}
                     onChange={e => setManualStartDate(e.target.value)}
-                    className="w-full px-4 py-2.5 rounded-xl bg-[#FAF7F0] border border-[#E9E4D8] text-xs focus:ring-2 focus:ring-[#A46F39] outline-none"
+                    className="w-full px-4 py-2.5 rounded-xl bg-[#FAFBFD] border border-[#E2E8F0] text-xs focus:ring-2 focus:ring-[#005995] outline-none"
                   />
                 </div>
 
                 <div>
-                  <label className="block font-mono text-[10px] uppercase tracking-wider text-[#172319] font-bold mb-1">
+                  <label className="block font-mono text-[10px] uppercase tracking-wider text-[#111827] font-bold mb-1">
                     INSTRUCTIONS (OPTIONAL)
                   </label>
                   <textarea
@@ -868,14 +753,14 @@ export const ShelfPage: React.FC = () => {
                     value={manualInstructions}
                     onChange={e => setManualInstructions(e.target.value)}
                     placeholder="How much, where, and for how long..."
-                    className="w-full px-4 py-2.5 rounded-xl bg-[#FAF7F0] border border-[#E9E4D8] text-xs focus:ring-2 focus:ring-[#A46F39] outline-none"
+                    className="w-full px-4 py-2.5 rounded-xl bg-[#FAFBFD] border border-[#E2E8F0] text-xs focus:ring-2 focus:ring-[#005995] outline-none"
                   />
                 </div>
 
                 <button
                   type="submit"
                   disabled={!manualName.trim()}
-                  className="w-full mt-3 py-3 px-6 rounded-full bg-[#A46F39] hover:bg-[#8F5E2D] disabled:bg-[#8D918A] text-white font-sans text-xs font-semibold transition-all shadow-md cursor-pointer disabled:cursor-not-allowed"
+                  className="w-full mt-3 py-3 px-6 rounded-full bg-[#005995] hover:bg-[#004777] disabled:bg-[#8D918A] text-white font-sans text-xs font-semibold transition-all shadow-md cursor-pointer disabled:cursor-not-allowed"
                 >
                   Add manual product
                 </button>
@@ -887,32 +772,32 @@ export const ShelfPage: React.FC = () => {
 
       {/* EDIT START DATE DIALOG */}
       {editingDateItemId && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#172319]/60 backdrop-blur-sm animate-in fade-in">
-          <div className="bg-white rounded-2xl max-w-sm w-full p-6 shadow-xl border border-[#E9E4D8]">
-            <h4 className="font-serif font-bold text-lg text-[#172319] mb-1">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#005995]/60 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-white rounded-2xl max-w-sm w-full p-6 shadow-xl border border-[#E2E8F0]">
+            <h4 className="font-serif font-bold text-lg text-[#111827] mb-1">
               Edit Start Date
             </h4>
-            <p className="font-sans text-xs text-[#6B6F66] mb-4">
-              Updating the start date will recalculate your Day count and verified timeline position.
+            <p className="font-sans text-xs text-[#64748B] mb-4">
+              Updating the start date recalculates your Day count and verified timeline position.
             </p>
             <input
               type="date"
               value={editDateValue}
               onChange={e => setEditDateValue(e.target.value)}
-              className="w-full px-4 py-2.5 rounded-xl bg-[#FAF7F0] border border-[#E9E4D8] text-xs focus:ring-2 focus:ring-[#A46F39] outline-none mb-4"
+              className="w-full px-4 py-2.5 rounded-xl bg-[#FAFBFD] border border-[#E2E8F0] text-xs focus:ring-2 focus:ring-[#005995] outline-none mb-4"
             />
             <div className="flex justify-end gap-2">
               <button
                 type="button"
                 onClick={() => setEditingDateItemId(null)}
-                className="px-4 py-2 rounded-full border border-[#E9E4D8] text-xs font-semibold text-[#6B6F66]"
+                className="px-4 py-2 rounded-full border border-[#E2E8F0] text-xs font-semibold text-[#64748B]"
               >
                 Cancel
               </button>
               <button
                 type="button"
                 onClick={handleSaveEditedDate}
-                className="px-5 py-2 rounded-full bg-[#172319] text-white text-xs font-semibold hover:bg-[#2C5044]"
+                className="px-5 py-2 rounded-full bg-[#143461] text-white text-xs font-semibold hover:bg-[#005995]"
               >
                 Save
               </button>

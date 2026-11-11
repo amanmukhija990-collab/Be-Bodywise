@@ -1,20 +1,24 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { Eyebrow } from '../components/Eyebrow';
 import { CATALOGUE_PRODUCTS } from '../data/catalogue';
-import { evaluateShelfItem, parseDate, getTodayDateStr } from '../lib/statusEngine';
+import { evaluateShelfItem } from '../lib/statusEngine';
 import { getLevelInfo } from '../lib/xpEngine';
 import { 
-  Flame, Trophy, Check, Lock, Star, ShieldAlert, Sparkles, CheckCircle2, ArrowRight 
+  Flame, Trophy, Check, Lock, ShieldAlert, Sparkles, Plus 
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
 export const JourneyPage: React.FC = () => {
-  const { user, logProductApplication, todayStr, addToast } = useApp();
+  const { 
+    user, 
+    logProductApplication, 
+    unlogProductApplication, 
+    toggleMission, 
+    todayStr 
+  } = useApp();
   const navigate = useNavigate();
-
-  const [selectedCalendarDate, setSelectedCalendarDate] = useState<string | null>(todayStr);
 
   const shelf = user?.shelf || [];
 
@@ -33,139 +37,77 @@ export const JourneyPage: React.FC = () => {
   const milestones = [
     {
       day: 1,
-      title: 'Day one',
-      subtitle: 'Baseline photo & first application',
+      title: 'Day 1 · Baseline Point',
+      subtitle: 'Starting your verified 90-day biological clock.',
       danger: false,
     },
     {
       day: 7,
-      title: 'First week',
-      subtitle: 'Habit is forming — skin & scalp adjusting',
+      title: 'Day 7 · First Week',
+      subtitle: 'Cellular habit formed; skin and scalp acclimating to actives.',
       danger: false,
     },
     {
       day: 14,
-      title: 'Adjustment exit',
-      subtitle: 'Purging and shedding settle down',
+      title: 'Day 14 · Adjustment Exit',
+      subtitle: 'Initial shedding and purge sensitivity settle down.',
       danger: false,
     },
     {
       day: 21,
-      title: 'Danger zone begins',
-      subtitle: 'Week 3: most people quit here. Not you.',
+      title: 'Day 21 · Danger Zone',
+      subtitle: 'Week 3: most people quit right here before turnover. Not you.',
       danger: true,
     },
     {
       day: 42,
-      title: 'Visible change',
-      subtitle: 'First visible results for most products',
+      title: 'Day 42 · Visible Shift',
+      subtitle: 'First visible clinical changes emerge in tone and root density.',
       danger: false,
     },
     {
       day: 70,
-      title: 'Momentum',
-      subtitle: 'Changes become easy to see in photos',
+      title: 'Day 70 · Peak Momentum',
+      subtitle: 'Sustained cellular renewal clearly visible in comparative photos.',
       danger: false,
     },
     {
       day: 90,
-      title: 'Transformation',
-      subtitle: 'Full 90-day results review',
+      title: 'Day 90 · Transformation',
+      subtitle: 'Full 90-day biological transformation complete.',
       danger: false,
     },
   ];
 
-  // Daily missions generated from shelf
-  const dailyMissions = shelf.map(item => {
-    const evalData = evaluateShelfItem(item, todayStr);
-    const prodName = item.productId
-      ? CATALOGUE_PRODUCTS.find(p => p.id === item.productId)?.name || 'Product'
-      : item.manual?.name || 'Manual Formula';
-
-    const isDone = item.logs.includes(todayStr);
-
-    let phase = 'Adjustment';
-    if (evalData.day >= 21 && evalData.day <= 60) phase = 'Lag phase';
-    if (evalData.day > 60) phase = 'Visible results';
-
-    return {
-      id: `apply-${item.id}`,
-      shelfItemId: item.id,
-      title: `Apply ${prodName}`,
-      subtitle: `${item.when} · Day ${evalData.day} · ${phase}`,
-      xp: 10,
-      isDone,
-    };
-  });
-
-  // Weekly missions
   const todayMissions = user?.missions[todayStr] || [];
-  const isDecoderDone = todayMissions.includes('weekly-decoder-review');
-  const isMatchDone = (user?.oneTimeAwards || []).includes('match_done');
 
-  const weeklyMissions = [
+  // Self-selectable weekly missions
+  const weeklyMissionsList = [
     {
       id: 'weekly-decoder-review',
-      title: 'Run a Results Decoder review',
-      subtitle: 'Get your personalised AI explanation.',
+      title: 'Complete Weekly Decoder Review',
+      subtitle: 'Inspect your active timeline phase and check in.',
       xp: 25,
-      isDone: isDecoderDone,
       action: () => navigate('/decoder'),
+    },
+    {
+      id: 'weekly-shelf-audit',
+      title: 'Shelf & Expiry Check',
+      subtitle: 'Verify bottle levels and store in cool dry space.',
+      xp: 20,
     },
     {
       id: 'weekly-product-match',
       title: 'Take the Personal Product Match',
-      subtitle: 'Know which formulas truly suit you.',
-      xp: 50,
-      isDone: isMatchDone,
+      subtitle: 'Refine your personalized formula ranking.',
+      xp: 30,
       action: () => navigate('/match'),
     },
   ];
 
-  const totalMissionsCount = dailyMissions.length + weeklyMissions.length;
-  const completedMissionsCount =
-    dailyMissions.filter(m => m.isDone).length + weeklyMissions.filter(m => m.isDone).length;
-
-  // 28-Day Consistency Calendar data
-  const calendarCells = [];
-  const allLogsSet = new Set<string>();
-  shelf.forEach(item => {
-    (item.logs || []).forEach(l => allLogsSet.add(l));
-  });
-
-  const now = new Date(todayStr);
-  let totalActiveDaysIn28 = 0;
-
-  for (let i = 27; i >= 0; i--) {
-    const d = new Date(now);
-    d.setDate(d.getDate() - i);
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, '0');
-    const dayOfMonth = String(d.getDate()).padStart(2, '0');
-    const dStr = `${y}-${m}-${dayOfMonth}`;
-
-    // Count how many products were applied on this day
-    let productsLoggedOnDay = 0;
-    shelf.forEach(item => {
-      if ((item.logs || []).includes(dStr)) {
-        productsLoggedOnDay++;
-      }
-    });
-
-    const isToday = dStr === todayStr;
-    if (productsLoggedOnDay > 0) totalActiveDaysIn28++;
-
-    calendarCells.push({
-      dateStr: dStr,
-      dayNum: d.getDate(),
-      count: productsLoggedOnDay,
-      isToday,
-    });
-  }
-
   const triggerMilestoneCelebration = () => {
     confetti({
-      particleCount: 70,
+      particleCount: 60,
       spread: 60,
       origin: { y: 0.6 },
       colors: ['#A46F39', '#E29D52', '#8EBEA6', '#2C5044'],
@@ -173,39 +115,32 @@ export const JourneyPage: React.FC = () => {
   };
 
   return (
-    <div className="w-full max-w-[1280px] mx-auto px-5 sm:px-8 py-10 md:py-14">
-      {/* 1. Hero Banner (Ink 28px radius) */}
-      <div className="rounded-[28px] bg-[#172319] text-white p-7 sm:p-10 border border-[#2E3E33] shadow-2xl mb-12 relative overflow-hidden">
-        {/* Subtle radial glow */}
-        <div className="absolute top-0 right-0 w-96 h-96 bg-[#A46F39]/10 rounded-full blur-3xl pointer-events-none" />
-
-        <div className="relative z-10 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8">
-          {/* Left + Centre */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 flex-1">
-            {/* Level Badge */}
-            <div className="w-20 h-20 rounded-2xl bg-[#E29D52] text-[#172319] flex flex-col items-center justify-center shrink-0 shadow-lg shadow-[#E29D52]/20 border border-white/20">
+    <div className="w-full max-w-[1280px] mx-auto px-5 sm:px-8 py-8 md:py-12">
+      {/* 1. Hero Banner */}
+      <div className="rounded-[28px] bg-[#143461] text-white p-7 sm:p-9 border border-[#225396] shadow-2xl mb-10 relative overflow-hidden">
+        <div className="relative z-10 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5 flex-1">
+            <div className="w-18 h-18 rounded-2xl bg-[#E29D52] text-[#111827] flex flex-col items-center justify-center shrink-0 shadow-lg border border-white/20">
               <span className="font-mono text-[9px] uppercase tracking-widest font-extrabold leading-none">
                 LEVEL
               </span>
-              <span className="font-serif font-black text-3xl leading-none mt-1">
+              <span className="font-serif font-black text-2xl leading-none mt-1">
                 {levelInfo.level}
               </span>
             </div>
 
-            {/* Level Title & XP Bar */}
             <div className="flex-1 w-full max-w-md">
-              <span className="font-mono text-[10px] uppercase tracking-[0.2em] font-semibold text-[#E29D52] block mb-1">
+              <span className="font-mono text-[10px] uppercase tracking-[0.2em] font-semibold text-[#EB6200] block mb-1">
                 12 · THE CARE JOURNEY
               </span>
-              <h1 className="font-serif font-medium text-2xl sm:text-3xl text-white mb-3">
+              <h1 className="font-serif font-medium text-2xl sm:text-3xl text-white mb-2">
                 {levelInfo.title}
               </h1>
 
-              {/* XP Bar */}
               <div className="w-full">
-                <div className="flex items-center justify-between text-xs text-white/80 font-mono mb-1.5">
+                <div className="flex items-center justify-between text-xs text-white/80 font-mono mb-1">
                   <span>{user?.xp || 0} XP</span>
-                  <span className="text-[#E29D52]">{levelInfo.nextLevelXp} XP · {levelInfo.nextLevelTitle}</span>
+                  <span className="text-[#EB6200]">{levelInfo.nextLevelXp} XP · {levelInfo.nextLevelTitle}</span>
                 </div>
                 <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
                   <div
@@ -217,10 +152,9 @@ export const JourneyPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Right: Three Frosted Stat Tiles */}
           <div className="flex flex-wrap sm:flex-nowrap items-center gap-3 w-full lg:w-auto">
-            <div className="flex-1 sm:w-28 p-3.5 rounded-2xl bg-white/10 backdrop-blur-md border border-white/10 text-center">
-              <div className="flex items-center justify-center gap-1 text-[#E29D52] mb-0.5">
+            <div className="flex-1 sm:w-28 p-3 rounded-2xl bg-white/10 backdrop-blur-md border border-white/10 text-center">
+              <div className="flex items-center justify-center gap-1 text-[#EB6200] mb-0.5">
                 <Flame className="w-4 h-4 fill-current" />
                 <span className="font-serif font-bold text-xl text-white leading-none">
                   {user?.streak || 0}
@@ -231,9 +165,9 @@ export const JourneyPage: React.FC = () => {
               </span>
             </div>
 
-            <div className="flex-1 sm:w-28 p-3.5 rounded-2xl bg-white/10 backdrop-blur-md border border-white/10 text-center">
-              <div className="flex items-center justify-center gap-1 text-[#E29D52] mb-0.5">
-                <Trophy className="w-4 h-4 text-[#E29D52]" />
+            <div className="flex-1 sm:w-28 p-3 rounded-2xl bg-white/10 backdrop-blur-md border border-white/10 text-center">
+              <div className="flex items-center justify-center gap-1 text-[#EB6200] mb-0.5">
+                <Trophy className="w-4 h-4 text-[#EB6200]" />
                 <span className="font-serif font-bold text-xl text-white leading-none">
                   {user?.bestStreak || 0}
                 </span>
@@ -243,11 +177,11 @@ export const JourneyPage: React.FC = () => {
               </span>
             </div>
 
-            <div className="flex-1 sm:w-28 p-3.5 rounded-2xl bg-white/10 backdrop-blur-md border border-white/10 text-center">
+            <div className="flex-1 sm:w-28 p-3 rounded-2xl bg-white/10 backdrop-blur-md border border-white/10 text-center">
               <div className="font-serif font-bold text-xl text-white leading-none mb-0.5">
-                {maxDay}
+                Day {maxDay}
               </div>
-              <span className="font-mono text-[9px] uppercase tracking-wider text-white/70 block mb-1.5">
+              <span className="font-mono text-[9px] uppercase tracking-wider text-white/70 block mb-1">
                 OF 90 DAYS
               </span>
               <div className="w-full h-1 bg-white/20 rounded-full overflow-hidden">
@@ -261,145 +195,320 @@ export const JourneyPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Two Columns Below */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
-        {/* Left Column: 90-Day Path Timeline */}
-        <div className="lg:col-span-7">
-          <Eyebrow className="mb-2">YOUR 90-DAY PATH</Eyebrow>
-          <h2 className="font-serif font-medium text-2xl sm:text-3xl text-[#172319] mb-8">
-            Every milestone, one step at a time
-          </h2>
-
-          <div className="relative pl-6 sm:pl-8 border-l-2 border-[#E9E4D8] space-y-10 ml-4">
-            {milestones.map(m => {
-              const isPassed = maxDay >= m.day;
-              const isCurrent = maxDay >= m.day && (milestones.find(next => next.day > m.day && maxDay < next.day) !== undefined || m.day === 90);
-
-              return (
-                <div key={m.day} className="relative group">
-                  {/* Timeline Node */}
-                  <div
-                    className={`absolute -left-[35px] sm:-left-[43px] top-0 w-8 h-8 rounded-full flex items-center justify-center transition-all ${
-                      isPassed
-                        ? 'bg-[#E29D52] text-[#172319] shadow-md ring-4 ring-[#FAF7F0]'
-                        : 'bg-[#F0EBE1] text-[#6B6F66] border border-[#E9E4D8]'
-                    }`}
-                  >
-                    {isPassed ? (
-                      <Check className="w-4 h-4 stroke-[3]" />
-                    ) : (
-                      <Lock className="w-3.5 h-3.5" />
-                    )}
-                  </div>
-
-                  {/* Milestone Card */}
-                  <div
-                    className={`p-5 rounded-2xl border transition-all ${
-                      isCurrent
-                        ? 'bg-white border-[#A46F39] shadow-sm'
-                        : isPassed
-                        ? 'bg-white/80 border-[#E9E4D8]'
-                        : 'bg-[#F5F1E8]/50 border-transparent opacity-60'
-                    }`}
-                  >
-                    <div className="flex flex-wrap items-center justify-between gap-2 mb-1">
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono text-[10px] uppercase tracking-wider text-[#A46F39] font-bold">
-                          DAY {m.day}
-                        </span>
-                        {isCurrent && (
-                          <span className="px-2 py-0.5 rounded-full bg-[#172319] text-white font-mono text-[9px] uppercase font-bold">
-                            YOU'RE HERE
-                          </span>
-                        )}
-                        {m.danger && (
-                          <span className="px-2.5 py-0.5 rounded-full bg-[#FFF0EB] text-[#B4492E] font-mono text-[9px] uppercase font-bold inline-flex items-center gap-1">
-                            <ShieldAlert className="w-3 h-3" />
-                            <span>DROPOUT ZONE</span>
-                          </span>
-                        )}
-                      </div>
-
-                      {isPassed && (
-                        <button
-                          onClick={triggerMilestoneCelebration}
-                          className="text-[11px] font-sans font-semibold text-[#2C5044] hover:underline"
-                        >
-                          Achieved ✓
-                        </button>
-                      )}
-                    </div>
-
-                    <h3 className="font-serif font-bold text-lg text-[#172319] mb-1">
-                      {m.title}
-                    </h3>
-                    <p className="font-sans text-xs text-[#6B6F66] leading-relaxed">
-                      {m.subtitle}
-                    </p>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Right Column: Sticky Stack (Missions + Calendar) */}
-        <div className="lg:col-span-5 flex flex-col gap-8 sticky top-24">
-          {/* 1. Missions Card */}
-          <div className="p-6 sm:p-7 rounded-[24px] bg-white border border-[#E9E4D8] shadow-sm">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        {/* Left Column: Simplified Consistency Planner & 90-Day Path */}
+        <div className="lg:col-span-7 flex flex-col gap-8">
+          {/* SIMPLIFIED CONSISTENCY PLANNER: Shows exactly how many days consistent with each product */}
+          <div className="p-6 sm:p-7 rounded-[24px] bg-white border border-[#E2E8F0] shadow-sm">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <span className="font-mono text-[10px] uppercase tracking-widest text-[#6B6F66] font-bold block">
-                  TODAY · {todayStr}
+                <span className="font-mono text-[10px] uppercase tracking-widest text-[#005995] font-bold block">
+                  CONSISTENCY PLANNER
                 </span>
-                <h3 className="font-serif font-bold text-xl text-[#172319]">
-                  Missions
-                </h3>
+                <h2 className="font-serif font-bold text-xl sm:text-2xl text-[#111827]">
+                  How Many Days You've Been Consistent
+                </h2>
               </div>
-              <span className="font-mono text-xs font-semibold px-2.5 py-1 rounded-full bg-[#FAF7F0] border border-[#E9E4D8] text-[#172319]">
-                {completedMissionsCount}/{totalMissionsCount} done
+              <span className="font-mono text-xs text-[#64748B] bg-[#FAFBFD] px-3 py-1 rounded-full border border-[#E2E8F0]">
+                {shelf.length} {shelf.length === 1 ? 'Product' : 'Products'}
               </span>
             </div>
 
+            <p className="font-sans text-xs sm:text-sm text-[#64748B] mb-6 leading-relaxed">
+              Your direct consistency count per formula. High consistency keeps biological active concentrations above clinical thresholds.
+            </p>
+
+            {shelf.length === 0 ? (
+              <p className="text-xs text-[#64748B] italic py-4">
+                No products on your shelf yet. Add formulas to start tracking consistency.
+              </p>
+            ) : (
+              <div className="space-y-4">
+                {shelf.map(item => {
+                  const evalData = evaluateShelfItem(item, todayStr);
+                  const prodName = item.productId
+                    ? CATALOGUE_PRODUCTS.find(p => p.id === item.productId)?.name || 'Product'
+                    : item.manual?.name || 'Manual Formula';
+                  const isLoggedToday = item.logs.includes(todayStr);
+                  const totalDaysActive = evalData.day;
+                  const daysLogged = item.logs?.length || 0;
+
+                  return (
+                    <div
+                      key={item.id}
+                      className="p-4 rounded-2xl bg-[#FAFBFD] border border-[#E2E8F0] flex flex-col gap-3"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <h3 className="font-serif font-semibold text-sm sm:text-base text-[#111827]">
+                            {prodName}
+                          </h3>
+                          <p className="font-mono text-[10px] text-[#64748B] mt-0.5">
+                            {item.when} · {item.frequency} · Started Day 1
+                          </p>
+                        </div>
+
+                        <div className="text-right">
+                          <p className="font-serif font-bold text-base sm:text-lg text-[#111827]">
+                            {daysLogged} of {totalDaysActive} days
+                          </p>
+                          <span className="font-mono text-[10px] font-semibold text-[#005995]">
+                            {evalData.consistency}% consistent
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Progress Bar */}
+                      <div className="w-full h-2 bg-[#E2E8F0] rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-[#005995] rounded-full transition-all duration-500"
+                          style={{ width: `${evalData.consistency}%` }}
+                        />
+                      </div>
+
+                      {/* Bottom status and direct toggle button */}
+                      <div className="flex items-center justify-between pt-1 text-xs">
+                        <span className="text-[11px] text-[#64748B]">
+                          {isLoggedToday ? '✓ Recorded for today' : '⚠️ Pending for today'}
+                        </span>
+
+                        {isLoggedToday ? (
+                          <button
+                            type="button"
+                            onClick={() => unlogProductApplication(item.id)}
+                            className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-[#EDFCF5] hover:bg-[#d5e7dc] text-[#198775] text-[10px] font-semibold transition-colors cursor-pointer"
+                            title="Click to unmark"
+                          >
+                            <Check className="w-3 h-3" />
+                            <span>Logged today (tap to undo)</span>
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => logProductApplication(item.id)}
+                            className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-[#005995] hover:bg-[#004777] text-white text-[10px] font-semibold transition-all cursor-pointer shadow-2xs"
+                          >
+                            <Plus className="w-3 h-3" />
+                            <span>Log for today</span>
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* 90-Day Path Timeline */}
+          <div>
+            <Eyebrow className="mb-2">90-DAY PROGRESSION PATH</Eyebrow>
+            <h3 className="font-serif font-medium text-2xl text-[#111827] mb-6">
+              Milestone Roadmap
+            </h3>
+
+            <div className="relative pl-6 sm:pl-8 border-l-2 border-[#E2E8F0] space-y-6 ml-3">
+              {milestones.map(m => {
+                const isPassed = maxDay >= m.day;
+                const isCurrent =
+                  maxDay >= m.day &&
+                  (milestones.find(next => next.day > m.day && maxDay < next.day) !== undefined || m.day === 90);
+
+                return (
+                  <div key={m.day} className="relative">
+                    <div
+                      className={`absolute -left-[35px] sm:-left-[43px] top-0 w-8 h-8 rounded-full flex items-center justify-center transition-all ${
+                        isPassed
+                          ? 'bg-[#E29D52] text-[#111827] shadow-md ring-4 ring-[#FAFBFD]'
+                          : 'bg-[#E6F5FF] text-[#64748B] border border-[#E2E8F0]'
+                      }`}
+                    >
+                      {isPassed ? (
+                        <Check className="w-4 h-4 stroke-[3]" />
+                      ) : (
+                        <Lock className="w-3.5 h-3.5" />
+                      )}
+                    </div>
+
+                    <div
+                      className={`p-4 rounded-2xl border transition-all ${
+                        isCurrent
+                          ? 'bg-white border-[#A46F39] shadow-sm'
+                          : isPassed
+                          ? 'bg-white/80 border-[#E2E8F0]'
+                          : 'bg-[#F0F6FA]/50 border-transparent opacity-60'
+                      }`}
+                    >
+                      <div className="flex flex-wrap items-center justify-between gap-2 mb-1">
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono text-[10px] uppercase tracking-wider text-[#005995] font-bold">
+                            DAY {m.day}
+                          </span>
+                          {isCurrent && (
+                            <span className="px-2 py-0.5 rounded-full bg-[#143461] text-white font-mono text-[9px] uppercase font-bold">
+                              YOU'RE HERE
+                            </span>
+                          )}
+                          {m.danger && (
+                            <span className="px-2 py-0.5 rounded-full bg-[#FFF0EB] text-[#B4492E] font-mono text-[9px] uppercase font-bold inline-flex items-center gap-1">
+                              <ShieldAlert className="w-3 h-3" />
+                              <span>DROPOUT ZONE</span>
+                            </span>
+                          )}
+                        </div>
+
+                        {isPassed && (
+                          <button
+                            onClick={triggerMilestoneCelebration}
+                            className="text-[11px] font-sans font-semibold text-[#198775] hover:underline"
+                          >
+                            Achieved ✓
+                          </button>
+                        )}
+                      </div>
+
+                      <h4 className="font-serif font-bold text-base text-[#111827]">
+                        {m.title}
+                      </h4>
+                      <p className="font-sans text-xs text-[#64748B] mt-0.5">
+                        {m.subtitle}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        {/* Right Column: User-Selectable Daily & Weekly Missions */}
+        <div className="lg:col-span-5 flex flex-col gap-6 sticky top-24">
+          <div className="p-6 sm:p-7 rounded-[24px] bg-white border border-[#E2E8F0] shadow-sm">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <span className="font-mono text-[10px] uppercase tracking-widest text-[#64748B] font-bold block">
+                  TODAY · DAY {maxDay}
+                </span>
+                <h3 className="font-serif font-bold text-xl text-[#111827]">
+                  Daily & Weekly Missions
+                </h3>
+              </div>
+              <span className="font-mono text-xs text-[#005995] font-semibold bg-[#FAFBFD] px-2.5 py-1 rounded-full border border-[#E2E8F0]">
+                Select yourself each day
+              </span>
+            </div>
+
+            <p className="font-sans text-xs text-[#64748B] mb-5 leading-relaxed">
+              Check off your daily applications and weekly ritual reviews as you complete them.
+            </p>
+
             {/* Daily Missions */}
             <div className="mb-6">
-              <span className="font-mono text-[10px] uppercase tracking-wider text-[#A46F39] font-bold block mb-2.5">
-                DAILY MISSIONS
+              <span className="font-mono text-[10px] uppercase tracking-wider text-[#005995] font-bold block mb-2.5">
+                DAILY MISSIONS · TAP TO CHECK
               </span>
 
-              {dailyMissions.length === 0 ? (
-                <p className="font-sans text-xs text-[#6B6F66] italic">
+              {shelf.length === 0 ? (
+                <p className="font-sans text-xs text-[#64748B] italic">
                   Add products to your shelf to unlock daily ritual missions.
                 </p>
               ) : (
                 <div className="flex flex-col gap-2">
-                  {dailyMissions.map(m => (
+                  {shelf.map(item => {
+                    const prodName = item.productId
+                      ? CATALOGUE_PRODUCTS.find(p => p.id === item.productId)?.name || 'Product'
+                      : item.manual?.name || 'Manual Formula';
+                    const isDone = item.logs.includes(todayStr);
+
+                    return (
+                      <div
+                        key={item.id}
+                        onClick={() => {
+                          if (isDone) {
+                            unlogProductApplication(item.id);
+                          } else {
+                            logProductApplication(item.id);
+                          }
+                        }}
+                        className={`p-3.5 rounded-2xl border transition-all flex items-center justify-between gap-3 cursor-pointer ${
+                          isDone
+                            ? 'bg-[#EDFCF5] border-[#C5E6D4]'
+                            : 'bg-white border-[#E2E8F0] hover:border-[#005995] hover:shadow-2xs'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div
+                            className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 ${
+                              isDone
+                                ? 'bg-[#005995] text-white'
+                                : 'border border-[#E2E8F0] text-transparent hover:border-[#005995]'
+                            }`}
+                          >
+                            <Check className="w-3.5 h-3.5 stroke-[3]" />
+                          </div>
+                          <div className="min-w-0">
+                            <p className={`font-sans font-semibold text-xs text-[#111827] truncate ${isDone ? 'line-through text-[#198775]' : ''}`}>
+                              Apply {prodName}
+                            </p>
+                            <p className="font-sans text-[10px] text-[#64748B] truncate">
+                              {item.when} · {item.frequency}
+                            </p>
+                          </div>
+                        </div>
+
+                        <span
+                          className={`font-mono text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${
+                            isDone
+                              ? 'bg-[#005995]/15 text-[#198775]'
+                              : 'bg-[#E6F5FF] text-[#005995]'
+                          }`}
+                        >
+                          ⚡ +10 XP
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Weekly Missions */}
+            <div>
+              <span className="font-mono text-[10px] uppercase tracking-wider text-[#005995] font-bold block mb-2.5">
+                WEEKLY MISSIONS · TAP TO CHECK
+              </span>
+
+              <div className="flex flex-col gap-2">
+                {weeklyMissionsList.map(m => {
+                  const isDone = todayMissions.includes(m.id);
+
+                  return (
                     <div
                       key={m.id}
                       onClick={() => {
-                        if (!m.isDone) logProductApplication(m.shelfItemId);
+                        toggleMission(m.id, m.xp);
                       }}
-                      className={`p-3.5 rounded-2xl border transition-all flex items-center justify-between gap-3 ${
-                        m.isDone
-                          ? 'bg-[#E8F1EC] border-[#C5E6D4]'
-                          : 'bg-white border-[#E9E4D8] hover:border-[#A46F39] hover:shadow-2xs cursor-pointer'
+                      className={`p-3.5 rounded-2xl border transition-all flex items-center justify-between gap-3 cursor-pointer ${
+                        isDone
+                          ? 'bg-[#EDFCF5] border-[#C5E6D4]'
+                          : 'bg-white border-[#E2E8F0] hover:border-[#005995] hover:shadow-2xs'
                       }`}
                     >
                       <div className="flex items-center gap-3 min-w-0">
                         <div
                           className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 ${
-                            m.isDone
-                              ? 'bg-[#2C5044] text-white'
-                              : 'border border-[#E9E4D8] text-transparent hover:border-[#A46F39]'
+                            isDone
+                              ? 'bg-[#005995] text-white'
+                              : 'border border-[#E2E8F0] text-transparent hover:border-[#005995]'
                           }`}
                         >
                           <Check className="w-3.5 h-3.5 stroke-[3]" />
                         </div>
                         <div className="min-w-0">
-                          <p className="font-sans font-semibold text-xs text-[#172319] truncate">
+                          <p className={`font-sans font-semibold text-xs text-[#111827] truncate ${isDone ? 'line-through text-[#198775]' : ''}`}>
                             {m.title}
                           </p>
-                          <p className="font-sans text-[10px] text-[#6B6F66] truncate">
+                          <p className="font-sans text-[10px] text-[#64748B] truncate">
                             {m.subtitle}
                           </p>
                         </div>
@@ -407,164 +516,16 @@ export const JourneyPage: React.FC = () => {
 
                       <span
                         className={`font-mono text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${
-                          m.isDone
-                            ? 'bg-[#2C5044]/15 text-[#2C5044]'
-                            : 'bg-[#FFF4E5] text-[#A46F39]'
+                          isDone
+                            ? 'bg-[#005995]/15 text-[#198775]'
+                            : 'bg-[#E6F5FF] text-[#005995]'
                         }`}
                       >
-                        ⚡ {m.xp}
+                        ⚡ +{m.xp} XP
                       </span>
                     </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Weekly Missions */}
-            <div>
-              <span className="font-mono text-[10px] uppercase tracking-wider text-[#A46F39] font-bold block mb-2.5">
-                WEEKLY MISSIONS
-              </span>
-              <div className="flex flex-col gap-2">
-                {weeklyMissions.map(m => (
-                  <div
-                    key={m.id}
-                    onClick={() => {
-                      if (!m.isDone && m.action) m.action();
-                    }}
-                    className={`p-3.5 rounded-2xl border transition-all flex items-center justify-between gap-3 ${
-                      m.isDone
-                        ? 'bg-[#E8F1EC] border-[#C5E6D4]'
-                        : 'bg-white border-[#E9E4D8] hover:border-[#A46F39] hover:shadow-2xs cursor-pointer'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div
-                        className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 ${
-                          m.isDone
-                            ? 'bg-[#2C5044] text-white'
-                            : 'border border-[#E9E4D8] text-transparent hover:border-[#A46F39]'
-                        }`}
-                      >
-                        <Check className="w-3.5 h-3.5 stroke-[3]" />
-                      </div>
-                      <div className="min-w-0">
-                        <p className="font-sans font-semibold text-xs text-[#172319] truncate">
-                          {m.title}
-                        </p>
-                        <p className="font-sans text-[10px] text-[#6B6F66] truncate">
-                          {m.subtitle}
-                        </p>
-                      </div>
-                    </div>
-
-                    <span
-                      className={`font-mono text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${
-                        m.isDone
-                          ? 'bg-[#2C5044]/15 text-[#2C5044]'
-                          : 'bg-[#FFF4E5] text-[#A46F39]'
-                      }`}
-                    >
-                      ⚡ {m.xp}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* 2. Consistency Calendar · 28 Days */}
-          <div className="p-6 sm:p-7 rounded-[24px] bg-white border border-[#E9E4D8] shadow-sm">
-            <span className="font-mono text-[10px] uppercase tracking-widest text-[#A46F39] font-bold block mb-3">
-              CONSISTENCY CALENDAR · 28 DAYS
-            </span>
-
-            {/* 7x4 Grid of rounded squares */}
-            <div className="grid grid-cols-7 gap-2 mb-4">
-              {calendarCells.map((cell, idx) => {
-                let bg = '#F0EBE1';
-                if (cell.count === 1) bg = '#EADCC2';
-                if (cell.count === 2) bg = '#E29D52';
-                if (cell.count >= 3) bg = '#A46F39';
-
-                const isSelected = selectedCalendarDate === cell.dateStr;
-
-                return (
-                  <button
-                    key={idx}
-                    type="button"
-                    onClick={() => setSelectedCalendarDate(cell.dateStr)}
-                    className={`aspect-square rounded-[10px] flex items-center justify-center transition-all cursor-pointer relative ${
-                      isSelected
-                        ? 'ring-2 ring-[#A46F39] scale-105 z-10 font-bold'
-                        : cell.isToday
-                        ? 'ring-1 ring-[#172319]'
-                        : 'hover:scale-105'
-                    }`}
-                    style={{ backgroundColor: bg }}
-                    title={`${cell.dateStr}: ${cell.count} products logged`}
-                    aria-label={`Inspect logs for ${cell.dateStr}`}
-                  >
-                    <span className="font-mono text-[10px] text-[#172319]">
-                      {cell.dayNum}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* Selected Date Inspector Panel */}
-            {selectedCalendarDate && (
-              <div className="p-3.5 rounded-xl bg-[#FAF7F0] border border-[#E9E4D8] mb-4 text-left animate-in fade-in">
-                <div className="flex items-center justify-between text-xs mb-1.5">
-                  <span className="font-mono font-bold text-[#A46F39] uppercase text-[10px]">
-                    LOGS FOR {selectedCalendarDate} {selectedCalendarDate === todayStr ? '(TODAY)' : ''}
-                  </span>
-                  <span className="text-[10px] font-mono text-[#6B6F66]">
-                    {shelf.filter(item => (item.logs || []).includes(selectedCalendarDate)).length} APPLIED
-                  </span>
-                </div>
-
-                {shelf.filter(item => (item.logs || []).includes(selectedCalendarDate)).length === 0 ? (
-                  <p className="font-sans text-xs text-[#6B6F66] italic">
-                    No applications recorded on this date.
-                  </p>
-                ) : (
-                  <div className="flex flex-wrap gap-1.5">
-                    {shelf
-                      .filter(item => (item.logs || []).includes(selectedCalendarDate))
-                      .map(item => {
-                        const name = item.productId
-                          ? CATALOGUE_PRODUCTS.find(p => p.id === item.productId)?.name
-                          : item.manual?.name;
-                        return (
-                          <span
-                            key={item.id}
-                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-white border border-[#E9E4D8] text-[11px] font-sans text-[#172319]"
-                          >
-                            <span className="text-[#2C5044]">✓</span>
-                            <span>{name}</span>
-                          </span>
-                        );
-                      })}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Footer */}
-            <div className="flex items-center justify-between text-xs text-[#6B6F66] pt-2 border-t border-[#E9E4D8]">
-              <span className="font-sans font-medium text-[#172319]">
-                {totalActiveDaysIn28} active days total
-              </span>
-
-              <div className="flex items-center gap-1 text-[10px] font-mono">
-                <span>Less</span>
-                <span className="w-2.5 h-2.5 rounded-sm bg-[#F0EBE1]" />
-                <span className="w-2.5 h-2.5 rounded-sm bg-[#EADCC2]" />
-                <span className="w-2.5 h-2.5 rounded-sm bg-[#E29D52]" />
-                <span className="w-2.5 h-2.5 rounded-sm bg-[#A46F39]" />
-                <span>More</span>
+                  );
+                })}
               </div>
             </div>
           </div>

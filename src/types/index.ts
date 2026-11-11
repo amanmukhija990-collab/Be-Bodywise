@@ -25,7 +25,10 @@ export interface CatalogueProduct {
   name: string;
   category: Category;
   sizeMl?: number;
-  price: number; // ₹
+  price: number; // ₹ (Selling Price)
+  mrp?: number; // ₹ (Original MRP)
+  rating?: number; // e.g. 4.8
+  reviewCount?: number; // e.g. 1840
   tagline: string;
   image: string;
   actives: string[];
@@ -35,6 +38,11 @@ export interface CatalogueProduct {
   reactivity: 1 | 2 | 3; // 1 gentle … 3 strong
   timeline: ProductTimeline;
   usage: ProductUsage;
+}
+
+export interface CartItem {
+  productId: string;
+  quantity: number;
 }
 
 export interface CheckInRecord {
@@ -65,8 +73,21 @@ export interface ShelfItem {
 
 export interface MatchAnswers {
   focus: Category[];
+  primaryCategory?: 'hair' | 'skin' | 'body' | 'pcos' | 'nutrition';
+  primaryGoal?: string;
   skinType?: string;
   concerns: string[];
+  severity?: string;
+  symptoms?: string[];
+  lifestyle?: {
+    ageGroup?: string;
+    waterIntake?: string;
+    sleepHours?: string;
+    stressLevel?: string;
+    dietType?: string;
+  };
+  customerName?: string;
+  customerType?: string;
   reactivity: string;
   commitment: 'minimal' | 'balanced' | 'complete';
 }

@@ -8,10 +8,6 @@ import { LandingPage } from './pages/LandingPage';
 import { AuthPage } from './pages/AuthPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { MatchPage } from './pages/MatchPage';
-import { RoutineTestPage } from './pages/RoutineTestPage';
-import { ShelfPage } from './pages/ShelfPage';
-import { DecoderPage } from './pages/DecoderPage';
-import { JourneyPage } from './pages/JourneyPage';
 import { ProductDetailPage } from './pages/ProductDetailPage';
 import { CategoryPage } from './pages/CategoryPage';
 import { OrdersPage } from './pages/OrdersPage';
@@ -59,35 +55,15 @@ const AppLayout: React.FC = () => {
               </ProtectedRoute>
             }
           />
+          <Route path="/routine-test" element={<Navigate to="/match" replace />} />
+          <Route path="/shelf" element={<Navigate to="/dashboard" replace />} />
+          <Route path="/decoder" element={<Navigate to="/dashboard" replace />} />
+          <Route path="/journey" element={<Navigate to="/dashboard" replace />} />
           <Route
-            path="/routine-test"
+            path="/orders"
             element={
               <ProtectedRoute>
-                <RoutineTestPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/shelf"
-            element={
-              <ProtectedRoute>
-                <ShelfPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/decoder"
-            element={
-              <ProtectedRoute>
-                <DecoderPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/journey"
-            element={
-              <ProtectedRoute>
-                <JourneyPage />
+                <OrdersPage />
               </ProtectedRoute>
             }
           />

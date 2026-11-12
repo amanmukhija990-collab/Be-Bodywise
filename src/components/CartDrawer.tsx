@@ -104,7 +104,7 @@ export const CartDrawer: React.FC = () => {
       colors: ['#005995', '#198775', '#BADCF0', '#D4924C'],
     });
     addToast(
-      'Prescribed Routine Loaded',
+      'Recommended Products Loaded',
       `Shopping bag updated with doctor-recommended ${assessmentCategoryTitle} formulas`,
       'success'
     );
@@ -344,11 +344,11 @@ export const CartDrawer: React.FC = () => {
                         {mismatchedProductNames.length === 1 ? (
                           <> The formula <strong className="text-[#78350F]">&ldquo;{mismatchedProductNames[0]}&rdquo;</strong> in your bag differs from your personalized prescription.</>
                         ) : (
-                          <> {mismatchedProductNames.length} items in your bag differ from your prescribed routine ({mismatchedProductNames.slice(0, 2).join(', ')}{mismatchedProductNames.length > 2 ? '…' : ''}).</>
+                          <> {mismatchedProductNames.length} items in your bag differ from your assessment recommendations ({mismatchedProductNames.slice(0, 2).join(', ')}{mismatchedProductNames.length > 2 ? '…' : ''}).</>
                         )}
                       </p>
 
-                      {/* Prescribed routine action buttons */}
+                      {/* Recommended products action buttons */}
                       <div className="mt-3 flex flex-wrap items-center gap-2 pt-2 border-t border-[#FDE68A]/60">
                         {recommendedRoutineProducts.length > 0 && (
                           <button
@@ -357,7 +357,7 @@ export const CartDrawer: React.FC = () => {
                             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#D97706] hover:bg-[#B45309] text-white text-[11px] font-sans font-semibold transition-colors cursor-pointer shadow-xs"
                           >
                             <Sparkles className="w-3 h-3" />
-                            <span>Switch to Prescribed Routine</span>
+                            <span>Switch to Recommended Products</span>
                           </button>
                         )}
                         <button

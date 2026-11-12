@@ -157,7 +157,7 @@ export const LandingPage: React.FC = () => {
       id: 'special-offers',
       filterKey: 'special-offers' as CategoryFilterType,
       name: 'Special Offers Unlocked',
-      tagline: '3-Step Routine & Defense Packs',
+      tagline: 'Targeted Body Defense Packs',
       count: '4 Curated Sets',
       image: 'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=700&q=80',
       badge: 'UP TO 25% OFF',
@@ -343,20 +343,11 @@ export const LandingPage: React.FC = () => {
     addToast('Added to Shopping Bag!', `${productName} added to your bag`, 'success');
   };
 
-  // Handler to add the complete 3-Step Routine bundle
-  const handleAddBundleToBag = () => {
-    addToCart('prod-body-3', 1); // 1% Salicylic Acid Body Wash
-    addToCart('prod-body-1', 1); // 10% AHA Exfoliating Lotion
-    addToCart('prod-body-2', 1); // 4% AHA Underarm Roll-On
-    addToast('3-Step Clinical Routine Added!', 'Bundle discount automatically applied in bag', 'success');
-    setIsCartOpen(true);
-  };
-
   // FAQ list (Minimalist transparent educational answers)
   const faqs = [
     {
       q: 'How long does it take to see visible results on body acne and bacne?',
-      a: 'Because body skin is 3x thicker than facial skin, topical BHA (1% Salicylic Acid) requires 14–21 days of daily use to dissolve deep follicular plugs. By Day 28–45, surface inflammation subsides and recurring breakout frequency drops significantly. You can track this exact biological progression in our integrated Results Decoder.',
+      a: 'Because body skin is 3x thicker than facial skin, topical BHA (1% Salicylic Acid) requires 14–21 days of daily use to dissolve deep follicular plugs. By Day 28–45, surface inflammation subsides and recurring breakout frequency drops significantly with continued disciplined daily usage.',
     },
     {
       q: 'Can I use the 10% AHA Exfoliating Body Lotion immediately after shaving or waxing?',
@@ -371,8 +362,8 @@ export const LandingPage: React.FC = () => {
       a: 'Persistent body breakouts, hormonal jawline flare-ups, and severe hair shedding are often rooted in internal factors: insulin resistance, DHT sensitivity, and gut dysbiosis. Pairing topical clinical actives with targeted oral nutrition (such as 40:1 Inositol or Sesbania Biotin) creates a dual-action inside-and-out protocol.',
     },
     {
-      q: 'What is the 90-Day Results System and how does it integrate with my order?',
-      a: 'Skincare actives follow proven biological renewal cycles (28-day epidermal turnover, 90-day hair follicle anagen phase). Every order automatically connects to your personal My Shelf dashboard with day-by-day guidance, routine clash tests, and check-in timeline tracking.',
+      q: 'How does the Product Match Assessment recommend the right products?',
+      a: 'Every woman is biochemically unique. Our doctor-engineered Product Match Assessment evaluates your skin type, primary goals, active triggers, and lifestyle factors to recommend synergistic, clinically dosed formulations tailored precisely to your biological needs.',
     },
   ];
 
@@ -1208,7 +1199,7 @@ export const LandingPage: React.FC = () => {
               Know Everything About Your Biological Type & Needs
             </h2>
             <p className="font-sans text-xs sm:text-sm text-[#BADCF0] leading-relaxed">
-              Our dynamic assessment adapts questions and options based on your answers to decode your root causes and formulate your doctor-verified 3-step Be Bodywise prescription routine.
+              Our dynamic assessment adapts questions and options based on your answers to decode your root causes and formulate your doctor-verified Be Bodywise product recommendation.
             </p>
           </div>
 

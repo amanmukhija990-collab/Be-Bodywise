@@ -96,7 +96,7 @@ export const OrdersPage: React.FC = () => {
               Your Orders
             </h1>
             <p className="font-sans text-sm text-[#64748B] mt-1">
-              Track active dispatches, view invoices, or easily reorder your prescribed routine formulas.
+              Track active dispatches, view invoices, or easily reorder your personalized clinical formulas.
             </p>
           </div>
 

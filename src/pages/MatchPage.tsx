@@ -294,15 +294,15 @@ export const MatchPage: React.FC = () => {
     }, 2200);
   };
 
-  // Add Complete 3-Step Routine to Shopping Bag
+  // Add Recommended Bundle to Shopping Bag
   const handleAddBundleToBag = () => {
     if (!diagnosticReport) return;
     diagnosticReport.recommended3StepRoutine.forEach(stepItem => {
       addToCart(stepItem.product.id, 1);
     });
     addToast(
-      'Complete 3-Step Routine Added to Bag!',
-      'Exclusive 20% clinical assessment discount applied',
+      'Recommended Formulations Added to Bag!',
+      'Bundle discount automatically applied in bag',
       'success'
     );
     setIsCartOpen(true);
@@ -518,18 +518,18 @@ export const MatchPage: React.FC = () => {
           </div>
         </div>
 
-        {/* SECTION B: THE MATCHED 3-STEP CLINICAL PRESCRIPTION PROTOCOL */}
+        {/* SECTION B: TARGETED CLINICAL PRESCRIPTION PROTOCOL */}
         <div className="mb-14">
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-6">
             <div>
               <span className="font-mono text-xs font-bold uppercase tracking-widest text-[#005995] block mb-1">
-                TARGETED INSIDE-AND-OUT PROTOCOL
+                TARGETED CLINICAL FORMULATIONS
               </span>
               <h2 className="font-serif font-medium text-2xl sm:text-3xl text-[#111827]">
-                Your Prescribed 3-Step Routine
+                Your Prescribed Formulations
               </h2>
               <p className="font-sans text-xs sm:text-sm text-[#64748B] mt-1">
-                Formulated to work synergistically: chemical active exfoliation, topical nourishing treatment, and oral cellular nutrition.
+                Formulated to work synergistically for your specific cellular profile and targeted wellness goals.
               </p>
             </div>
 
@@ -549,12 +549,12 @@ export const MatchPage: React.FC = () => {
                 className="px-6 py-3 rounded-full bg-[#005995] hover:bg-[#004777] text-white font-sans text-xs sm:text-sm font-semibold transition-all shadow-md hover:scale-105 cursor-pointer flex items-center gap-2"
               >
                 <ShoppingBag className="w-4 h-4" />
-                <span>Add 3-Step Routine (Save 20%)</span>
+                <span>Add Recommended Bundle (Save 20%)</span>
               </button>
             </div>
           </div>
 
-          {/* 3 Step Cards Grid */}
+          {/* Prescribed Formulation Cards Grid */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {diagnosticReport.recommended3StepRoutine.map(stepItem => (
               <div 
@@ -564,7 +564,7 @@ export const MatchPage: React.FC = () => {
                 <div>
                   <div className="flex items-center justify-between mb-3">
                     <span className="px-3 py-1 rounded-full bg-[#143461] text-white font-mono text-[9px] uppercase tracking-wider font-bold">
-                      STEP 0{stepItem.stepNumber} · {stepItem.role}
+                      {stepItem.role}
                     </span>
                     <span className="font-serif font-bold text-base text-[#111827]">
                       ₹{stepItem.product.price}

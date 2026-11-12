@@ -158,7 +158,7 @@ export const CATEGORIES_DATA: CategoryData[] = [
     bg: 'bg-[#F0FDF4]',
     border: 'border-[#BBF7D0]',
     doctorNote: 'Clinical regimens deliver 2.4x higher adherence and measurable biological transformation because multiple active ingredients address root causes simultaneously.',
-    subcategories: ['All Special Offers', '3-Step Body Acne Kit', 'Hair Density Growth Pack', 'Clear Skin Daily Trio'],
+    subcategories: ['All Special Offers', 'Body Acne Defense Kit', 'Hair Density Growth Pack', 'Clear Skin Daily Trio'],
     targetConcerns: ['Complete Body Acne Routine', 'Maximum Hair Growth', 'Complete Morning Skincare', 'Bundle Value Savings'],
     faqs: [
       {

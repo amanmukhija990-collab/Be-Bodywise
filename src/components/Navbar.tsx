@@ -202,18 +202,6 @@ export const Navbar: React.FC = () => {
             >
               Best Sellers
             </a>
-            <a
-              href="/#routine"
-              onClick={(e) => {
-                if (location.pathname === '/') {
-                  e.preventDefault();
-                  document.getElementById('routine')?.scrollIntoView({ behavior: 'smooth' });
-                }
-              }}
-              className="text-[14px] font-sans text-[#64748B] hover:text-[#005995] transition-colors whitespace-nowrap shrink-0"
-            >
-              3-Step Routine
-            </a>
             <Link
               to="/match"
               className="text-[14px] font-sans text-[#64748B] hover:text-[#005995] transition-colors whitespace-nowrap shrink-0"
